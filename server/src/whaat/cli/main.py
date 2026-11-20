@@ -9,7 +9,7 @@ import urllib.request
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import typer
 import uvicorn
@@ -737,5 +737,26 @@ def wait_for_decisions(
             continue
         if collected["sent"]:
             typer.echo(collected["text"])
+            return
+        time.sleep(every)
+
+
+@app.command("wait")
+def wait_for_page(
+    kind: Annotated[Literal["curation", "migration"], typer.Argument(help="Which page's session waits.")],
+    every: Annotated[float, typer.Option(help="Seconds between two looks.")] = DECISIONS_POLL_SECONDS,
+) -> None:
+    """Wait until the user acts on the curation or migration page, then print the call whaat composed from it. Run it
+    in the background: it asks the server in short calls, so a server restart in between only delays it."""
+    settings = load_settings()
+    token = _identity_token(settings)
+    while True:
+        try:
+            handed = _post_json(settings, "/api/v1/handoff/next", {"kind": kind}, token)
+        except (urllib.error.URLError, ConnectionError, TimeoutError):
+            time.sleep(every)
+            continue
+        if handed["call"]:
+            typer.echo(handed["call"])
             return
         time.sleep(every)

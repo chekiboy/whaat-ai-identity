@@ -458,10 +458,14 @@ class MigrationPlanSummary(BaseModel):
 
 
 class MigrationSent(BaseModel):
-    command: str = Field(description="The call that imports the chosen groups; typed into the session when it runs.")
-    session: str | None
-    typed: bool
-    detail: str | None = Field(description="Why it was not typed: no running migration session, or the readback.")
+    command: str = Field(description="The call that imports the chosen groups; handed to the waiting session.")
+    handed: bool = Field(description="The waiting migration session takes the call; false: the user pastes it.")
+    detail: str | None = Field(description="Why it was not handed: no migration session waits for the page.")
+
+
+class MigrationStarted(BaseModel):
+    command: str = Field(description="The line to paste into a terminal: it starts the migration as the identity.")
+    waiting: bool = Field(description="A migration session of this identity already waits for the page.")
 
 
 class MigrationStart(Strict):

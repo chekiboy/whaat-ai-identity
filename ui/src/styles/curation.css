@@ -583,8 +583,10 @@
   color: var(--cur-muted);
 }
 
-/* modals */
+/* modals; they name their own ink, so a modal opened outside the report page reads the same */
 .cur-modal {
+  --cur-ink: #1a1712;
+  --cur-muted: #6b6250;
   position: fixed;
   inset: 0;
   z-index: 50;

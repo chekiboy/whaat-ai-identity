@@ -625,18 +625,20 @@
       },
       "CurationStarted": {
         "properties": {
-          "session": {
-            "$ref": "#/components/schemas/TerminalSession"
+          "command": {
+            "description": "The line to paste into a terminal: it starts the curation report as the identity.",
+            "title": "Command",
+            "type": "string"
           },
-          "started": {
-            "description": "False when a curation session of this identity was already running.",
-            "title": "Started",
+          "waiting": {
+            "description": "A curation session of this identity already waits for the page.",
+            "title": "Waiting",
             "type": "boolean"
           }
         },
         "required": [
-          "session",
-          "started"
+          "command",
+          "waiting"
         ],
         "title": "CurationStarted",
         "type": "object"
@@ -1189,11 +1191,11 @@
                 "type": "null"
               }
             ],
-            "description": "When it was typed (YYYY-MM-DD HH:MM); null when it was not.",
+            "description": "When it was handed (YYYY-MM-DD HH:MM); null when it was not.",
             "title": "At"
           },
           "command": {
-            "description": "The call that applies the decisions; typed into the session when it runs.",
+            "description": "The call; handed to the waiting curation session, else shown to paste.",
             "title": "Command",
             "type": "string"
           },
@@ -1217,23 +1219,12 @@
                 "type": "null"
               }
             ],
-            "description": "Why it was not typed: no running session, or the prompt readback.",
+            "description": "Why it was not handed: no session waits, or nothing to apply.",
             "title": "Detail"
           },
-          "session": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "The curation session it was typed into, or would have been.",
-            "title": "Session"
-          },
-          "typed": {
-            "title": "Typed",
+          "handed": {
+            "description": "The waiting session takes the call; false: the user pastes it.",
+            "title": "Handed",
             "type": "boolean"
           },
           "warnings": {
@@ -1248,8 +1239,7 @@
           "commit",
           "warnings",
           "command",
-          "session",
-          "typed",
+          "handed",
           "detail"
         ],
         "title": "DecisionsSent",
@@ -1930,6 +1920,27 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Handed": {
+        "properties": {
+          "call": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The call to run now, composed by whaat from the user's click; null: none yet.",
+            "title": "Call"
+          }
+        },
+        "required": [
+          "call"
+        ],
+        "title": "Handed",
         "type": "object"
       },
       "Health": {
@@ -3476,7 +3487,7 @@
       "MigrationSent": {
         "properties": {
           "command": {
-            "description": "The call that imports the chosen groups; typed into the session when it runs.",
+            "description": "The call that imports the chosen groups; handed to the waiting session.",
             "title": "Command",
             "type": "string"
           },
@@ -3489,29 +3500,18 @@
                 "type": "null"
               }
             ],
-            "description": "Why it was not typed: no running migration session, or the readback.",
+            "description": "Why it was not handed: no migration session waits for the page.",
             "title": "Detail"
           },
-          "session": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Session"
-          },
-          "typed": {
-            "title": "Typed",
+          "handed": {
+            "description": "The waiting migration session takes the call; false: the user pastes it.",
+            "title": "Handed",
             "type": "boolean"
           }
         },
         "required": [
           "command",
-          "session",
-          "typed",
+          "handed",
           "detail"
         ],
         "title": "MigrationSent",
@@ -3585,6 +3585,26 @@
         "title": "MigrationStart",
         "type": "object"
       },
+      "MigrationStarted": {
+        "properties": {
+          "command": {
+            "description": "The line to paste into a terminal: it starts the migration as the identity.",
+            "title": "Command",
+            "type": "string"
+          },
+          "waiting": {
+            "description": "A migration session of this identity already waits for the page.",
+            "title": "Waiting",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "command",
+          "waiting"
+        ],
+        "title": "MigrationStarted",
+        "type": "object"
+      },
       "NewIdentity": {
         "additionalProperties": false,
         "properties": {
@@ -3623,6 +3643,24 @@
           "persona"
         ],
         "title": "NewTerminal",
+        "type": "object"
+      },
+      "NextCall": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "curation",
+              "migration"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "NextCall",
         "type": "object"
       },
       "OpenNative": {
@@ -4792,20 +4830,6 @@
         "title": "RowFigure",
         "type": "object"
       },
-      "RunState": {
-        "properties": {
-          "state": {
-            "description": "open (Done not sent), waiting, asked or exited.",
-            "title": "State",
-            "type": "string"
-          }
-        },
-        "required": [
-          "state"
-        ],
-        "title": "RunState",
-        "type": "object"
-      },
       "SavedCurationReport": {
         "properties": {
           "commit": {
@@ -5572,7 +5596,7 @@
                 "type": "null"
               }
             ],
-            "description": "The folder to start in; the configured folder if none.",
+            "description": "The folder the line starts in; the terminal's own if none.",
             "title": "Cwd"
           },
           "identity": {
@@ -6050,7 +6074,7 @@
   "paths": {
     "/api/v1/curation/decisions": {
       "post": {
-        "description": "Save the user's word per row into the report, then type the apply call into the identity's running curation\nsession and stamp the applied rows as sent; a row already sent (and not reverted since) is refused. When no\nsession runs, the answer carries the call to paste.",
+        "description": "Save the user's word per row into the report, then hand the apply call to the identity's waiting curation\nsession and stamp the applied rows as sent; a row already sent (and not reverted since) is refused. When no\nsession waits, the answer carries the call to paste.",
         "operationId": "send_decisions",
         "requestBody": {
           "content": {
@@ -6128,7 +6152,7 @@
     },
     "/api/v1/curation/done": {
       "post": {
-        "description": "Done on the page: the session-end call with no steps; a watcher then waits for the closing line and types\n/exit. Its state is read from /run-state.",
+        "description": "Done on the page: hand the session-end call with no steps to the waiting curation session, which ends the\ncuration; its terminal is the user's to close.",
         "operationId": "send_done",
         "requestBody": {
           "content": {
@@ -6175,7 +6199,7 @@
     },
     "/api/v1/curation/revert": {
       "post": {
-        "description": "Type revert-applied-rows for one applied row into the curation session; the row counts as not sent again.",
+        "description": "Hand revert-applied-rows for one applied row to the waiting curation session; the row counts as unsent again.",
         "operationId": "send_revert",
         "requestBody": {
           "content": {
@@ -6220,57 +6244,9 @@
         ]
       }
     },
-    "/api/v1/curation/run-state": {
-      "get": {
-        "description": "waiting, asked, exited after Done; open when Done was not sent.",
-        "operationId": "run_state",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "identity",
-            "required": true,
-            "schema": {
-              "title": "Identity",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RunState"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Run State",
-        "tags": [
-          "curation"
-        ]
-      }
-    },
     "/api/v1/curation/start": {
       "post": {
-        "description": "Start memory-curation's report in a terminal session of the identity, with its own agent config; a curation\nsession already running for it is returned instead of a second one.",
+        "description": "The line that starts memory-curation's report as this identity, with its own agent config, for the user to\npaste into a terminal.",
         "operationId": "start_curation",
         "requestBody": {
           "content": {
@@ -6360,6 +6336,53 @@
         "summary": "Curation Page",
         "tags": [
           "curation"
+        ]
+      }
+    },
+    "/api/v1/handoff/next": {
+      "post": {
+        "description": "The next call for this identity's session of this kind, taken as it is given; also marks the session as\nlistening, so the page hands its next click over instead of showing the call to paste.",
+        "operationId": "next_call",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NextCall"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Handed"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Next Call",
+        "tags": [
+          "handoff"
         ]
       }
     },
@@ -7640,7 +7663,7 @@
     },
     "/api/v1/memory/migration/plans/{plan_id}/decisions": {
       "post": {
-        "description": "Save the user's choice from the page into the plan, then type the import call into the identity's running\nmigration session; without one, the answer carries the call to paste.",
+        "description": "Save the user's choice from the page into the plan, then hand the import call to the identity's migration\nsession waiting through `whaat wait migration`; without one, the answer carries the call to paste.",
         "operationId": "migration_plan_decide",
         "parameters": [
           {
@@ -7746,7 +7769,7 @@
     },
     "/api/v1/memory/migration/start": {
       "post": {
-        "description": "Start the migration skill in a terminal session of the identity, with its own agent config, in the folder\ngiven or else in that agent config's folder, never the home folder; one already running is returned instead.",
+        "description": "The line that starts the migration skill as this identity, for the user to paste into a terminal: in the folder\ngiven or else in its agent config's folder, never the home folder.",
         "operationId": "migration_start",
         "requestBody": {
           "content": {
@@ -7763,7 +7786,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TerminalSession"
+                  "$ref": "#/components/schemas/MigrationStarted"
                 }
               }
             },

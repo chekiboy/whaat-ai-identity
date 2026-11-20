@@ -2,6 +2,14 @@
 
 What changed in each version of whaat. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Until 1.0, a new minor version (0.2, 0.3) may change the API, the CLI or the file formats.
 
+## Unreleased
+
+### Changed
+
+- **Curation and migration no longer run in the app's terminal.** **Start curation** and the migration's start button show a line to paste into a terminal of your own; it starts the agent as the identity, in PowerShell syntax on Windows. The session then waits for its page in the background (`whaat wait curation`, `whaat wait migration`), and each click on the page reaches it through whaat instead of being typed into a tmux session. A call waits on disk until the session takes it, so a server restart in between loses nothing. When no session waits, the page shows the call to paste, as before.
+- **API.** `POST /api/v1/curation/start` and `POST /api/v1/memory/migration/start` return the line to paste (`command`) and whether a session already waits (`waiting`) instead of a terminal session. The curation and migration answers say `handed` instead of `typed` and no longer name a session. New: `POST /api/v1/handoff/next`, which the waiting session asks with the identity's token. Removed: `GET /api/v1/curation/run-state`.
+- The migrate skill no longer ends its turns with `[whaat] waiting for your answer` or `[whaat] done`: the page no longer follows the session's screen.
+
 ## 0.4.0 (2026-11-20)
 
 ### Added

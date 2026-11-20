@@ -9,6 +9,7 @@ import { cardLevel, LAYER_ORDER, LEVEL_ORDER, nameOf, useMemoryLabels } from "@/
 import { LEVEL_COLOUR, MemorySheet, MemorySplit, type Placed } from "@/components/memory/memory-split";
 import { ModuleBar, ModuleBarSection } from "@/components/shell/module-bar";
 import { Skeleton } from "@/components/shell/skeleton";
+import { StartLineModal } from "@/components/start-line";
 import { useLanguage, useTranslation } from "@/i18n";
 import { sectionTitle, usePageHeading } from "@/lib/breadcrumb";
 import { apiBase, authToken } from "@/lib/connection";
@@ -783,6 +784,14 @@ function CurationSection() {
         {curation.pending ? t("curation.starting") : t("curation.start")}
       </button>
       {curation.error && <p className="sh-note">{t("curation.startFailed", { error: curation.error })}</p>}
+      {curation.line && (
+        <StartLineModal
+          title={t("curation.lineTitle")}
+          note={t(curation.waiting ? "curation.lineWaiting" : "curation.lineNote")}
+          line={curation.line}
+          onClose={curation.clear}
+        />
+      )}
     </ModuleBarSection>
   );
 }

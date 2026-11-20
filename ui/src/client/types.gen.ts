@@ -392,13 +392,18 @@ export type CurationSection = {
  * CurationStarted
  */
 export type CurationStarted = {
-    session: TerminalSession;
     /**
-     * Started
+     * Command
      *
-     * False when a curation session of this identity was already running.
+     * The line to paste into a terminal: it starts the curation report as the identity.
      */
-    started: boolean;
+    command: string;
+    /**
+     * Waiting
+     *
+     * A curation session of this identity already waits for the page.
+     */
+    waiting: boolean;
 };
 
 /**
@@ -746,13 +751,13 @@ export type DecisionsSent = {
     /**
      * At
      *
-     * When it was typed (YYYY-MM-DD HH:MM); null when it was not.
+     * When it was handed (YYYY-MM-DD HH:MM); null when it was not.
      */
     at?: string | null;
     /**
      * Command
      *
-     * The call that applies the decisions; typed into the session when it runs.
+     * The call; handed to the waiting curation session, else shown to paste.
      */
     command: string;
     /**
@@ -762,19 +767,15 @@ export type DecisionsSent = {
     /**
      * Detail
      *
-     * Why it was not typed: no running session, or the prompt readback.
+     * Why it was not handed: no session waits, or nothing to apply.
      */
     detail: string | null;
     /**
-     * Session
+     * Handed
      *
-     * The curation session it was typed into, or would have been.
+     * The waiting session takes the call; false: the user pastes it.
      */
-    session: string | null;
-    /**
-     * Typed
-     */
-    typed: boolean;
+    handed: boolean;
     /**
      * Warnings
      */
@@ -1203,6 +1204,18 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * Handed
+ */
+export type Handed = {
+    /**
+     * Call
+     *
+     * The call to run now, composed by whaat from the user's click; null: none yet.
+     */
+    call: string | null;
 };
 
 /**
@@ -2163,23 +2176,21 @@ export type MigrationSent = {
     /**
      * Command
      *
-     * The call that imports the chosen groups; typed into the session when it runs.
+     * The call that imports the chosen groups; handed to the waiting session.
      */
     command: string;
     /**
      * Detail
      *
-     * Why it was not typed: no running migration session, or the readback.
+     * Why it was not handed: no migration session waits for the page.
      */
     detail: string | null;
     /**
-     * Session
+     * Handed
+     *
+     * The waiting migration session takes the call; false: the user pastes it.
      */
-    session: string | null;
-    /**
-     * Typed
-     */
-    typed: boolean;
+    handed: boolean;
 };
 
 /**
@@ -2225,6 +2236,24 @@ export type MigrationStart = {
 };
 
 /**
+ * MigrationStarted
+ */
+export type MigrationStarted = {
+    /**
+     * Command
+     *
+     * The line to paste into a terminal: it starts the migration as the identity.
+     */
+    command: string;
+    /**
+     * Waiting
+     *
+     * A migration session of this identity already waits for the page.
+     */
+    waiting: boolean;
+};
+
+/**
  * NewIdentity
  */
 export type NewIdentity = {
@@ -2250,6 +2279,16 @@ export type NewTerminal = {
      * Persona
      */
     persona: string;
+};
+
+/**
+ * NextCall
+ */
+export type NextCall = {
+    /**
+     * Kind
+     */
+    kind: 'curation' | 'migration';
 };
 
 /**
@@ -2994,18 +3033,6 @@ export type RowFigure = {
 };
 
 /**
- * RunState
- */
-export type RunState = {
-    /**
-     * State
-     *
-     * open (Done not sent), waiting, asked or exited.
-     */
-    state: string;
-};
-
-/**
  * SavedCurationReport
  */
 export type SavedCurationReport = {
@@ -3418,7 +3445,7 @@ export type StartCuration = {
     /**
      * Cwd
      *
-     * The folder to start in; the configured folder if none.
+     * The folder the line starts in; the terminal's own if none.
      */
     cwd?: string | null;
     /**
@@ -3852,36 +3879,6 @@ export type SendRevertResponses = {
 
 export type SendRevertResponse = SendRevertResponses[keyof SendRevertResponses];
 
-export type RunStateData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Identity
-         */
-        identity: string;
-    };
-    url: '/api/v1/curation/run-state';
-};
-
-export type RunStateErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RunStateError = RunStateErrors[keyof RunStateErrors];
-
-export type RunStateResponses = {
-    /**
-     * Successful Response
-     */
-    200: RunState;
-};
-
-export type RunStateResponse = RunStateResponses[keyof RunStateResponses];
-
 export type StartCurationData = {
     body: StartCuration;
     path?: never;
@@ -3936,6 +3933,31 @@ export type CurationPageResponses = {
 };
 
 export type CurationPageResponse = CurationPageResponses[keyof CurationPageResponses];
+
+export type NextCallData = {
+    body: NextCall;
+    path?: never;
+    query?: never;
+    url: '/api/v1/handoff/next';
+};
+
+export type NextCallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NextCallError = NextCallErrors[keyof NextCallErrors];
+
+export type NextCallResponses = {
+    /**
+     * Successful Response
+     */
+    200: Handed;
+};
+
+export type NextCallResponse = NextCallResponses[keyof NextCallResponses];
 
 export type GetHealthData = {
     body?: never;
@@ -4726,7 +4748,7 @@ export type MigrationStartResponses = {
     /**
      * Successful Response
      */
-    200: TerminalSession;
+    200: MigrationStarted;
 };
 
 export type MigrationStartResponse = MigrationStartResponses[keyof MigrationStartResponses];

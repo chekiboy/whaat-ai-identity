@@ -2,7 +2,7 @@
 
 **Experimental:** it may change or break, and it is not finished.
 
-The terminal runs agent sessions inside the app. You pick an identity and a project folder, and Whaat starts the agent there. It works as that identity when the identity has its own Claude Code config folder (see below); otherwise the session runs the plain start command. Curation and migration use it too: their pages start the agent in a terminal session and type your decisions into it.
+The terminal runs agent sessions inside the app. You pick an identity and a project folder, and Whaat starts the agent there. It works as that identity when the identity has its own Claude Code config folder (see below); otherwise the session runs the plain start command.
 
 ## How sessions work
 

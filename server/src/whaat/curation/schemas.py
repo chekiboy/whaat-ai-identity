@@ -2,17 +2,18 @@ from pydantic import BaseModel, Field
 
 from whaat.journal.schemas import CurationDecision
 from whaat.reports.types.base import Strict
-from whaat.terminal.schemas import TerminalSession
 
 
 class StartCuration(Strict):
     identity: str = Field(description="Whose memory to curate; its own agent config runs the session.")
-    cwd: str | None = Field(default=None, description="The folder to start in; the configured folder if none.")
+    cwd: str | None = Field(default=None, description="The folder the line starts in; the terminal's own if none.")
 
 
 class CurationStarted(BaseModel):
-    session: TerminalSession
-    started: bool = Field(description="False when a curation session of this identity was already running.")
+    command: str = Field(
+        description="The line to paste into a terminal: it starts the curation report as the identity."
+    )
+    waiting: bool = Field(description="A curation session of this identity already waits for the page.")
 
 
 class Discarded(BaseModel):
@@ -38,11 +39,10 @@ class SendDecisions(Strict):
 class DecisionsSent(BaseModel):
     commit: str | None
     warnings: list[str]
-    command: str = Field(description="The call that applies the decisions; typed into the session when it runs.")
-    session: str | None = Field(description="The curation session it was typed into, or would have been.")
-    typed: bool
-    detail: str | None = Field(description="Why it was not typed: no running session, or the prompt readback.")
-    at: str | None = Field(default=None, description="When it was typed (YYYY-MM-DD HH:MM); null when it was not.")
+    command: str = Field(description="The call; handed to the waiting curation session, else shown to paste.")
+    handed: bool = Field(description="The waiting session takes the call; false: the user pastes it.")
+    detail: str | None = Field(description="Why it was not handed: no session waits, or nothing to apply.")
+    at: str | None = Field(default=None, description="When it was handed (YYYY-MM-DD HH:MM); null when it was not.")
 
 
 class RevertRow(Strict):
@@ -52,7 +52,3 @@ class RevertRow(Strict):
 
 class DoneCall(Strict):
     identity: str
-
-
-class RunState(BaseModel):
-    state: str = Field(description="open (Done not sent), waiting, asked or exited.")

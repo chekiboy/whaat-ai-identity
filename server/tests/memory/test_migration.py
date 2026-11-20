@@ -332,7 +332,7 @@ def test_a_plan_is_chosen_on_the_page_and_imported_as_chosen(
     assert hidden.status_code == 404
     assert early.status_code == 409
     assert wrong_target.status_code == 422
-    assert (sent["typed"], sent["command"]) == (False, f"/whaat:memory-migrate import plan={plan_id}")
+    assert (sent["handed"], sent["command"]) == (False, f"/whaat:memory-migrate import plan={plan_id}")
     assert [g["id"] for g in imported["groups"]] == ["1:.", "2:acme/shop"]
     root = trial_root(settings) / "memory"
     personal_files = [p for p in (root / "personal").glob("*.md") if p.name != "MEMORY.md"]
@@ -457,3 +457,24 @@ def test_a_memory_edited_here_since_its_import_is_edited_not_a_conflict(
     assert by_id["1:acme"]["conflicts"] == ["acme/feedback_h.md"] and by_id["1:acme"]["edited"] == []
     assert again["groups"][0]["edited"] == ["feedback_a.md"] and again["groups"][0]["conflicts"] == []
     assert (root / "feedback_a.md").read_text() == memory("feedback_a", "Do it. See [[feedback_b]].")
+
+
+def test_the_import_call_is_handed_to_the_migration_session_waiting_for_the_page(
+    client: TestClient, trial: dict[str, str], store: Path
+) -> None:
+    plan_id = client.post(
+        "/api/v1/memory/migration/plans", json={"sources": [{"path": str(store), "kind": "store"}]}, headers=trial
+    ).json()["plan"]["id"]
+    asked = client.post("/api/v1/handoff/next", json={"kind": "migration"}, headers=trial).json()
+
+    sent = client.post(
+        f"/api/v1/memory/migration/plans/{plan_id}/decisions",
+        json={"identity": "trial", "groups": ["1:."]},
+        headers=ADMIN,
+    ).json()
+    taken = client.post("/api/v1/handoff/next", json={"kind": "migration"}, headers=trial).json()
+    curation = client.post("/api/v1/handoff/next", json={"kind": "curation"}, headers=trial).json()
+
+    call = f"/whaat:memory-migrate import plan={plan_id}"
+    assert (asked["call"], sent["handed"], sent["command"]) == (None, True, call)
+    assert (taken["call"], curation["call"]) == (call, None)

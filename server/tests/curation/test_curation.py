@@ -1,9 +1,4 @@
-import dataclasses
 import json
-import shutil
-import subprocess
-import time
-import uuid
 from pathlib import Path
 
 import pytest
@@ -11,9 +6,9 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import CLAUDE_TOKEN, TOKEN, write
 from whaat.config import Settings
+from whaat.handoff.store import LISTEN_SECONDS, HandoffStore
 from whaat.main import create_app
 from whaat.terminal.agent import Launch
-from whaat.terminal.tmux import PROMPT_MARK, prompt_line, same_text
 
 ADMIN = {"Authorization": f"Bearer {TOKEN}"}
 CLAUDE = {"Authorization": f"Bearer {CLAUDE_TOKEN}"}
@@ -29,27 +24,9 @@ def the_memory_the_rows_name(settings: Settings) -> None:
     )
 
 
-# a stand-in for claude, not a shell (the terminal takes a pane back at its shell as idle): shows a prompt, and writes
-# its first argument and every line it reads into a file
-FAKE_CLAUDE = """import os, sys
-seen = open(os.environ["SEEN"], "a", buffering=1)
-seen.write(f"arg: {sys.argv[1]}\\n")
-while True:
-    sys.stdout.write("\\u276f "); sys.stdout.flush()
-    line = sys.stdin.readline()
-    if not line:
-        break
-    seen.write(f"got: {line}")
-"""
-
-
 @pytest.fixture
-def app(settings: Settings, tmp_path: Path):
-    instance = f"t{uuid.uuid4().hex[:10]}"
-    configured = dataclasses.replace(settings, instance=instance, terminal_cwd=tmp_path)
-    client = TestClient(create_app(configured, TOKEN))
-    yield client
-    subprocess.run(["tmux", "-L", f"whaat-{instance}", "kill-server"], capture_output=True, check=False)
+def app(settings: Settings) -> TestClient:
+    return TestClient(create_app(settings, TOKEN))
 
 
 def saved_report(client: TestClient) -> str:
@@ -59,34 +36,32 @@ def saved_report(client: TestClient) -> str:
     return report_id
 
 
-def with_fake_claude(client: TestClient, tmp_path: Path) -> Path:
-    script = write(tmp_path / "fake-claude", FAKE_CLAUDE)
-    seen = tmp_path / "seen.txt"
-    client.app.state.terminals.launch = lambda persona: Launch(  # type: ignore[attr-defined]
-        command=f"SEEN={seen} python3 {script}", env={}
+def next_call(client: TestClient) -> str | None:
+    """What the session's `whaat wait curation` asks with the identity's token; asking also marks it as waiting."""
+    response = client.post("/api/v1/handoff/next", json={"kind": "curation"}, headers=CLAUDE)
+    assert response.status_code == 200, response.text
+    call: str | None = response.json()["call"]
+    return call
+
+
+def test_the_start_line_runs_the_report_with_the_identity_s_agent_config(app: TestClient) -> None:
+    app.app.state.launch = lambda persona: Launch(  # type: ignore[attr-defined]
+        command="claude --plugin-dir /c/claude_code", env={"CLAUDE_CONFIG_DIR": "/cfg/claude"}
     )
-    return seen
+
+    started = app.post("/api/v1/curation/start", json={"identity": "claude", "cwd": "/w x"}, headers=ADMIN).json()
+
+    assert started == {
+        "command": "cd '/w x' && CLAUDE_CONFIG_DIR=/cfg/claude claude --plugin-dir /c/claude_code"
+        " '/whaat:memory-curation report'",
+        "waiting": False,
+    }
 
 
-def wait_for(path: Path, needle: str) -> str:
-    for _ in range(100):
-        text = path.read_text() if path.exists() else ""
-        if needle in text:
-            return text
-        time.sleep(0.05)
-    return path.read_text() if path.exists() else ""
-
-
-@pytest.mark.skipif(shutil.which("tmux") is None, reason="tmux is not installed")
-def test_the_button_starts_the_report_and_the_decisions_are_saved_and_typed_into_that_session(
-    app: TestClient, settings: Settings, tmp_path: Path
-) -> None:
+def test_the_decisions_are_saved_and_handed_once_to_the_waiting_session(app: TestClient, settings: Settings) -> None:
     report_id = saved_report(app)
-    seen = with_fake_claude(app, tmp_path)
+    assert next_call(app) is None
 
-    started = app.post("/api/v1/curation/start", json={"identity": "claude"}, headers=ADMIN).json()
-    assert "arg: /whaat:memory-curation report" in wait_for(seen, "arg:")
-    again = app.post("/api/v1/curation/start", json={"identity": "claude"}, headers=ADMIN).json()
     sent = app.post(
         "/api/v1/curation/decisions",
         json={"report_id": report_id, "rows": [{"n": 1, "decision": "apply", "note": "only the path"}]},
@@ -95,20 +70,68 @@ def test_the_button_starts_the_report_and_the_decisions_are_saved_and_typed_into
 
     call = f"/whaat:memory-curation apply-rows report={report_id} confirmed=report-page"
     stored = json.loads(next((settings.identities["claude"] / "memory-curation").rglob("*.json")).read_text())
-    assert (started["started"], started["session"]["label"], again["started"]) == (True, "memory-curation", False)
-    assert (sent["typed"], sent["session"], sent["command"]) == (True, started["session"]["name"], call)
-    assert f"got: {call}" in wait_for(seen, "got:")
+    assert (sent["handed"], sent["command"], sent["detail"]) == (True, call, None)
+    assert (next_call(app), next_call(app)) == (call, None)
     assert [(r["decision"], r["note"]) for r in stored["body"]["rows"]] == [("apply", "only the path"), (None, None)]
+    assert stored["body"]["rows"][0]["sent_at"] == sent["at"]
 
 
-def test_without_a_running_session_the_decisions_are_saved_and_the_call_is_handed_back(app: TestClient) -> None:
+def test_without_a_waiting_session_the_decisions_are_saved_and_the_call_is_handed_back(app: TestClient) -> None:
     report_id = saved_report(app)
     body = {"report_id": report_id, "rows": [{"n": 2, "decision": "apply"}]}
 
     sent = app.post("/api/v1/curation/decisions", json=body, headers=ADMIN).json()
 
-    assert (sent["typed"], sent["detail"]) == (False, "no curation session runs for this identity")
+    assert (sent["handed"], sent["detail"]) == (False, "no curation session of this identity waits for the page")
     assert sent["command"].endswith(f"report={report_id} confirmed=report-page")
+    assert next_call(app) is None
+
+
+def test_revert_and_done_reach_the_waiting_session_in_the_order_sent(app: TestClient) -> None:
+    applied = {**ROW, "n": 2, "applied": "store abc"}
+    response = app.post(
+        "/api/v1/journal/curation-reports", json={"report": {**REPORT, "rows": [ROW, applied]}}, headers=CLAUDE
+    )
+    report_id = response.json()["report_id"]
+    next_call(app)
+
+    reverted = app.post("/api/v1/curation/revert", json={"report_id": report_id, "n": 2}, headers=ADMIN).json()
+    done = app.post("/api/v1/curation/done", json={"identity": "claude"}, headers=ADMIN).json()
+
+    assert reverted["handed"] and done["handed"]
+    assert (
+        next_call(app) == f"/whaat:memory-curation revert-applied-rows report={report_id} rows=2 confirmed=report-page"
+    )
+    assert next_call(app) == "/whaat:session-end steps=none confirmed=report-page"
+
+
+def test_a_handed_call_waits_on_disk_through_a_server_restart(app: TestClient, settings: Settings) -> None:
+    next_call(app)
+    app.post("/api/v1/curation/done", json={"identity": "claude"}, headers=ADMIN)
+
+    restarted = TestClient(create_app(settings, TOKEN))
+
+    assert next_call(restarted) == "/whaat:session-end steps=none confirmed=report-page"
+
+
+def test_a_session_counts_as_waiting_only_shortly_after_its_last_ask(tmp_path: Path) -> None:
+    now = [1000.0]
+    store = HandoffStore(tmp_path, clock=lambda: now[0])
+    store.take("claude", "curation")
+
+    waiting = store.listening("claude", "curation")
+    now[0] += LISTEN_SECONDS + 1
+
+    assert (waiting, store.listening("claude", "curation"), store.listening("claude", "migration")) == (
+        True,
+        False,
+        False,
+    )
+
+
+def test_only_the_identity_s_own_token_takes_its_calls(app: TestClient) -> None:
+    assert app.post("/api/v1/handoff/next", json={"kind": "curation"}, headers=ADMIN).status_code == 403
+    assert app.post("/api/v1/handoff/next", json={"kind": "nope"}, headers=CLAUDE).status_code == 422
 
 
 def test_decisions_are_refused_for_an_unknown_row_or_report_and_for_an_identity(app: TestClient) -> None:
@@ -131,21 +154,16 @@ def test_an_identity_without_an_agent_config_cannot_start_a_curation(app: TestCl
     assert response.status_code == 409
 
 
-def test_the_prompt_is_read_back_and_a_dim_suggestion_counts_as_empty() -> None:
-    assert prompt_line(f"x\n{PROMPT_MARK} hello world\n") == ("hello world", False)
-    assert prompt_line(f"{PROMPT_MARK} \x1b[2mTry this\x1b[0m\n") == ("Try this", True)
-    assert prompt_line("no prompt here") == (None, False)
-    assert same_text("a b", "ab") and not same_text(None, "a")
-
-
-def test_discarding_only_saves_and_types_nothing_and_the_next_run_sees_it(app: TestClient) -> None:
+def test_discarding_only_saves_and_hands_nothing_and_the_next_run_sees_it(app: TestClient) -> None:
     report_id = saved_report(app)
+    next_call(app)
     body = {"report_id": report_id, "rows": [{"n": 2, "decision": "reject", "note": "not now"}]}
 
     sent = app.post("/api/v1/curation/decisions", json=body, headers=ADMIN).json()
     discarded = app.get("/api/v1/curation/discarded", headers=CLAUDE).json()
 
-    assert (sent["typed"], sent["detail"]) == (False, "only discarded rows: nothing to apply, the decisions are saved")
+    assert (sent["handed"], sent["detail"]) == (False, "only discarded rows: nothing to apply, the decisions are saved")
+    assert next_call(app) is None
     assert [(d["file"], d["actions"], d["note"], d["report_id"]) for d in discarded] == [
         ("feedback_x.md", ["verify"], "not now", report_id)
     ]

@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated
 
@@ -8,6 +7,8 @@ from fastapi.responses import HTMLResponse
 from whaat.distilled.schemas import DistilledAnalysis
 from whaat.distilled.store import load_analysis, load_graph
 from whaat.git import GitCommitError
+from whaat.handoff.command import start_line
+from whaat.handoff.store import HandoffStore
 from whaat.identities.registry import Principal
 from whaat.memory import (
     brain,
@@ -46,6 +47,7 @@ from whaat.memory.schemas import (
     MigrationPlanView,
     MigrationSent,
     MigrationStart,
+    MigrationStarted,
     PersonalMoved,
     ReadCall,
     ReadsCall,
@@ -69,10 +71,6 @@ from whaat.memory.schemas import (
 from whaat.memory.service import MEMORY_DIR, MemoryService
 from whaat.security import PrincipalDep, require_identity
 from whaat.terminal.agent import AgentTokenMissingError
-from whaat.terminal.projects import FolderError, folder
-from whaat.terminal.schemas import TerminalSession
-from whaat.terminal.service import Terminals
-from whaat.terminal.tmux import SessionNotFoundError, TmuxMissingError, TypingError
 
 router = APIRouter(prefix="/api/v1/memory", tags=["memory"])
 
@@ -301,7 +299,6 @@ def migration_move_personal(service: MemoryServiceDep, identity: IdentityDep) ->
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
 
 
-MIGRATE_LABEL = "memory-migrate"
 MIGRATE_CALL = "/whaat:memory-migrate"
 IMPORT_CALL = "/whaat:memory-migrate import plan={plan_id}"
 
@@ -371,8 +368,8 @@ def migration_plan_get(
 def migration_plan_decide(
     plan_id: str, body: MigrationDecisions, request: Request, principal: PrincipalDep, service: MemoryServiceDep
 ) -> MigrationSent:
-    """Save the user's choice from the page into the plan, then type the import call into the identity's running
-    migration session; without one, the answer carries the call to paste."""
+    """Save the user's choice from the page into the plan, then hand the import call to the identity's migration
+    session waiting through `whaat wait migration`; without one, the answer carries the call to paste."""
     if not principal.admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="this needs the admin token")
     identity = _plan_identity(request, principal, body.identity)
@@ -395,20 +392,14 @@ def migration_plan_decide(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"no such group: {', '.join(unknown)}"
         )
     command = IMPORT_CALL.format(plan_id=plan_id)
-    terminals: Terminals = request.app.state.terminals
-    sessions = (s for s in reversed(terminals.sessions(identity)) if s.label == MIGRATE_LABEL and not s.gone)
-    session = next((s for s in sessions if terminals.runs_program(s.name)), None)
-    detail = None if session else "no migration session runs for this identity"
-    if session:
-        try:
-            terminals.type_into(session.name, command)
-        except (TypingError, SessionNotFoundError) as err:
-            detail = str(err)
-    if detail is None:
+    handoff: HandoffStore = request.app.state.handoff
+    detail = None
+    if handoff.listening(identity, "migration"):
+        handoff.put(identity, "migration", command)
         migration_plans.mark_sent(folder, decided)
-    return MigrationSent(
-        command=command, session=session.name if session else None, typed=detail is None, detail=detail
-    )
+    else:
+        detail = "no migration session of this identity waits for the page"
+    return MigrationSent(command=command, handed=detail is None, detail=detail)
 
 
 @router.post("/migration/plans/{plan_id}/import", response_model=MigrationImported)
@@ -437,33 +428,28 @@ def migration_plan_import(plan_id: str, service: MemoryServiceDep, identity: Ide
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
 
 
-@router.post("/migration/start", response_model=TerminalSession)
-def migration_start(body: MigrationStart, request: Request, principal: PrincipalDep) -> TerminalSession:
-    """Start the migration skill in a terminal session of the identity, with its own agent config, in the folder
-    given or else in that agent config's folder, never the home folder; one already running is returned instead."""
+@router.post("/migration/start", response_model=MigrationStarted)
+def migration_start(body: MigrationStart, request: Request, principal: PrincipalDep) -> MigrationStarted:
+    """The line that starts the migration skill as this identity, for the user to paste into a terminal: in the folder
+    given or else in its agent config's folder, never the home folder."""
     if not principal.admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="this needs the admin token")
-    terminals: Terminals = request.app.state.terminals
     if body.identity not in request.app.state.registry.folders():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"no identity {body.identity!r}")
-    if terminals.launch(body.identity) is None:
+    config = request.app.state.preferences.agent_config(body.identity)
+    if not config:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"{body.identity} has no agent config: set its Claude config folder in Settings first",
         )
-    alive = (s for s in reversed(terminals.sessions(body.identity)) if s.label == MIGRATE_LABEL and not s.gone)
-    if running := next((s for s in alive if terminals.runs_program(s.name)), None):
-        return TerminalSession(**asdict(running), idle=running.idle)
     try:
-        cwd = folder(body.cwd or request.app.state.preferences.agent_config(body.identity))
-        session = terminals.create(body.identity, cwd, prompt=MIGRATE_CALL, label=MIGRATE_LABEL)
-    except FolderError as err:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(err)) from err
-    except TmuxMissingError as err:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(err)) from err
+        launch = request.app.state.launch(body.identity)
     except AgentTokenMissingError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
-    return TerminalSession(**asdict(session), idle=session.idle)
+    cwd = Path(body.cwd or config).expanduser()
+    command = start_line(launch, request.app.state.preferences.command(), MIGRATE_CALL, cwd)
+    handoff: HandoffStore = request.app.state.handoff
+    return MigrationStarted(command=command, waiting=handoff.listening(body.identity, "migration"))
 
 
 @router.post("/lint", response_model=Text)

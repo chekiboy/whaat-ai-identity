@@ -7,6 +7,8 @@ from whaat import __version__
 from whaat.config import Settings
 from whaat.curation.router import router as curation_router
 from whaat.git import GitCommitter
+from whaat.handoff.router import router as handoff_router
+from whaat.handoff.store import HandoffStore
 from whaat.health.router import code_commit
 from whaat.health.router import router as health_router
 from whaat.identities.registry import IdentityRegistry
@@ -60,19 +62,18 @@ def create_app(settings: Settings, token: str) -> FastAPI:
     app.state.native_open = open_in
     app.state.open_url = open_url
     preferences = app.state.preferences
-    app.state.terminals = Terminals(
-        app.state.tmux,
-        SessionRegistry(settings.state_dir),
-        lambda persona: launch_for(
-            persona, preferences.agent_config(persona), preferences.command(), settings, registry.stored_token
-        ),
+    app.state.handoff = HandoffStore(settings.state_dir)
+    app.state.launch = lambda persona: launch_for(
+        persona, preferences.agent_config(persona), preferences.command(), settings, registry.stored_token
     )
+    app.state.terminals = Terminals(app.state.tmux, SessionRegistry(settings.state_dir), app.state.launch)
     app.include_router(health_router)
     app.include_router(reports_router)
     app.include_router(identities_router)
     app.include_router(journal_router)
     app.include_router(memory_router)
     app.include_router(curation_router)
+    app.include_router(handoff_router)
     app.include_router(terminal_router)
     app.include_router(preferences_router)
     app.include_router(ui_router)
