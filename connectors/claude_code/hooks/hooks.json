@@ -1,13 +1,24 @@
 {
-  "description": "whaat memory hooks: the core, the indexes and the memory map at session start (SessionStart), the same for a subagent (SubagentStart), a recalled memory as a note, and direct reads and writes of memory pointed to whaat.",
+  "description": "whaat memory hooks: the core, the indexes and the memory map at session start (SessionStart), the same for a subagent (SubagentStart), a recalled memory as a note, and direct reads and writes of memory pointed to whaat. Each hook runs its stdlib script through uv, a real program on every system (exec form), so no shell or python3 name is assumed; --no-config keeps the session repo's Python pins and uv settings out.",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 1/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "1/7"
+            ]
           }
         ]
       },
@@ -15,8 +26,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 2/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "2/7"
+            ]
           }
         ]
       },
@@ -24,8 +46,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 3/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "3/7"
+            ]
           }
         ]
       },
@@ -33,8 +66,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 4/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "4/7"
+            ]
           }
         ]
       },
@@ -42,8 +86,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 5/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "5/7"
+            ]
           }
         ]
       },
@@ -51,8 +106,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 6/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "6/7"
+            ]
           }
         ]
       },
@@ -60,8 +126,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context index 7/7",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "index",
+              "7/7"
+            ]
           }
         ]
       },
@@ -69,8 +146,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context map 1/1",
-            "statusMessage": "Loading memory..."
+            "command": "uv",
+            "statusMessage": "Loading memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "map",
+              "1/1"
+            ]
           }
         ]
       },
@@ -78,8 +166,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context personal 1/3",
-            "statusMessage": "Loading personal memory..."
+            "command": "uv",
+            "statusMessage": "Loading personal memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "personal",
+              "1/3"
+            ]
           }
         ]
       },
@@ -87,8 +186,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context personal 2/3",
-            "statusMessage": "Loading personal memory..."
+            "command": "uv",
+            "statusMessage": "Loading personal memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "personal",
+              "2/3"
+            ]
           }
         ]
       },
@@ -96,8 +206,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context personal 3/3",
-            "statusMessage": "Loading personal memory..."
+            "command": "uv",
+            "statusMessage": "Loading personal memory...",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "personal",
+              "3/3"
+            ]
           }
         ]
       }
@@ -108,7 +229,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/memory-frame\""
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/memory-frame"
+            ]
           }
         ]
       },
@@ -117,7 +246,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/memory-outcome\""
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/memory-outcome"
+            ]
           }
         ]
       }
@@ -127,7 +264,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/memory-frame\""
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/memory-frame"
+            ]
           }
         ]
       }
@@ -138,7 +283,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/recall-guard\""
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/recall-guard"
+            ]
           }
         ]
       },
@@ -147,7 +300,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/memory-write-guard\""
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/memory-write-guard"
+            ]
           }
         ]
       }
@@ -157,7 +318,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start\" 1/4"
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start",
+              "1/4"
+            ]
           }
         ]
       },
@@ -165,7 +335,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start\" 2/4"
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start",
+              "2/4"
+            ]
           }
         ]
       },
@@ -173,7 +352,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start\" 3/4"
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start",
+              "3/4"
+            ]
           }
         ]
       },
@@ -181,7 +369,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start\" 4/4"
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start",
+              "4/4"
+            ]
           }
         ]
       }
@@ -191,7 +388,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\" --context compact 1/1"
+            "command": "uv",
+            "args": [
+              "run",
+              "--no-project",
+              "--no-config",
+              "--quiet",
+              "python",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/session-start",
+              "--context",
+              "compact",
+              "1/1"
+            ]
           }
         ]
       }

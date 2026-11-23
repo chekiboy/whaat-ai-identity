@@ -20,7 +20,7 @@ ADMIN = {"Authorization": f"Bearer {TOKEN}"}
 CLAUDE = {"Authorization": f"Bearer {CLAUDE_TOKEN}"}
 ROW = {"n": 1, "file": "feedback_x.md", "actions": ["verify"], "target": None, "reason": "old", "evidence": None}
 REPORT = {"lint_summary": "0 problems", "rows": [ROW, {**ROW, "n": 2}], "unchecked": "nothing"}
-LAUNCH = Launch(command="claude --plugin-dir /c/claude_code", env={"CLAUDE_CONFIG_DIR": "/cfg/claude"})
+LAUNCH = Launch(argv=["claude", "--plugin-dir", "/c/claude_code"], env={"CLAUDE_CONFIG_DIR": "/cfg/claude"})
 DONE = "/whaat:session-end steps=none confirmed=report-page"
 
 
@@ -68,14 +68,16 @@ def test_the_start_line_runs_the_report_with_the_identity_s_agent_config(app: Te
     assert again["waiting"] is True
 
 
-def test_the_powershell_line_quotes_its_values_and_sets_the_config_first() -> None:
-    launch = Launch(command="claude --plugin-dir 'C:\\w hat\\cc'", env={"CLAUDE_CONFIG_DIR": "C:\\o'neil\\cfg"})
+def test_the_powershell_line_stops_on_a_missing_folder_and_puts_the_config_back_when_claude_ends() -> None:
+    launch = Launch(argv=["claude", "--plugin-dir", "C:\\w'hat\\cc"], env={"CLAUDE_CONFIG_DIR": "C:\\o'neil\\cfg"})
 
     line = start_line(launch, "/whaat:memory-curation report", Path("C:/p x"), powershell=True)
 
     assert line == (
-        "Set-Location 'C:/p x'; $env:CLAUDE_CONFIG_DIR='C:\\o''neil\\cfg'; "
-        "claude --plugin-dir 'C:\\w hat\\cc' '/whaat:memory-curation report'"
+        "Set-Location -LiteralPath 'C:/p x' -ErrorAction Stop; "
+        "$whaat_CLAUDE_CONFIG_DIR=$env:CLAUDE_CONFIG_DIR; $env:CLAUDE_CONFIG_DIR='C:\\o''neil\\cfg'; "
+        "try { claude '--plugin-dir' 'C:\\w''hat\\cc' '/whaat:memory-curation report' } "
+        "finally { $env:CLAUDE_CONFIG_DIR=$whaat_CLAUDE_CONFIG_DIR }"
     )
 
 
@@ -280,3 +282,21 @@ def test_an_agent_config_without_a_kept_token_refuses_the_start_and_writes_nothi
 
     assert refused.status_code == 409 and "new token" in refused.json()["detail"]
     assert not (config / "settings.json").exists()
+
+
+def test_a_hand_off_file_in_another_layout_is_read_as_empty_and_then_written_anew(tmp_path: Path) -> None:
+    (tmp_path / "handoff").mkdir()
+    odd = {
+        "asked": 1.0,
+        "calls": [],
+        "bad-asked": {"asked": "x"},
+        "bad-calls": {"calls": [1]},
+        "text": {"calls": "abc"},
+    }
+    (tmp_path / "handoff" / "claude.json").write_text(json.dumps({"curation": odd, "x": 3}))
+    store = HandoffStore(tmp_path)
+
+    before = store.waiting("claude", "curation")
+    asked = (store.take("claude", "curation", "bad-calls"), store.take("claude", "curation", "r1"))
+
+    assert (before, asked, store.waiting("claude", "curation", "r1")) == (False, (None, None), True)

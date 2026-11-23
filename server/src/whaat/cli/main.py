@@ -104,20 +104,38 @@ def _ensure_running(settings: Settings) -> str:
         raise typer.Exit(1) from err
 
 
+def _sandbox_hint(settings: Settings) -> str:
+    """Inside Claude Code's sandbox the running server is out of reach and its folder is not writable."""
+    return (
+        "If Claude Code's sandbox is on, allow the `whaat` commands: run them outside the sandbox, or let the sandbox"
+        f" reach {settings.host}:{settings.port} and write {settings.state_dir} and uv's cache (`uv cache dir`)."
+    )
+
+
 def _start_unless_running(settings: Settings) -> str:
     where = f"{settings.instance} on {settings.public_url}"
     if running_instance(settings, _probe(settings)):
         return f"whaat {where} already runs"
-    make_state_dir(settings.state_dir)
     log_path = settings.state_dir / SERVER_LOG_NAME
-    with log_path.open("ab") as log:
-        spawn_detached([sys.executable, "-m", "whaat", "serve"], log)
+    try:
+        make_state_dir(settings.state_dir)
+        with log_path.open("ab") as log:
+            spawn_detached([sys.executable, "-m", "whaat", "serve"], log)
+    except OSError as err:
+        typer.echo(
+            f"whaat {where} does not answer here and cannot be started here ({err}). {_sandbox_hint(settings)}",
+            err=True,
+        )
+        raise typer.Exit(1) from err
     deadline = time.monotonic() + ENSURE_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         if running_instance(settings, _probe(settings)):
             return f"whaat {where} started"
         time.sleep(0.2)
-    typer.echo(f"whaat did not answer within {ENSURE_TIMEOUT_SECONDS:.0f}s; see {log_path}", err=True)
+    typer.echo(
+        f"whaat did not answer within {ENSURE_TIMEOUT_SECONDS:.0f}s; see {log_path}. {_sandbox_hint(settings)}",
+        err=True,
+    )
     raise typer.Exit(1)
 
 

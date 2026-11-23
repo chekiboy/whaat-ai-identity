@@ -489,7 +489,7 @@ def test_the_migration_line_starts_in_the_agent_config_unless_a_folder_is_given(
     config.mkdir()
     client.patch("/api/v1/preferences", json={"identity": {"agents": {"trial": str(config)}}}, headers=ADMIN)
     client.app.state.launch = lambda persona: Launch(  # type: ignore[attr-defined]
-        command="claude --plugin-dir /c/claude_code", env={"CLAUDE_CONFIG_DIR": str(config)}
+        argv=["claude", "--plugin-dir", "/c/claude_code"], env={"CLAUDE_CONFIG_DIR": str(config)}
     )
 
     started = client.post("/api/v1/memory/migration/start", json={"identity": "trial"}, headers=ADMIN).json()

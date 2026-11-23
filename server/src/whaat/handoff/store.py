@@ -19,6 +19,13 @@ CALL_SECONDS = 600.0
 HANDOFF_DIR = "handoff"
 
 
+def _entry_ok(entry: object) -> bool:
+    if not isinstance(entry, dict) or not isinstance(entry.get("asked", 0), int | float):
+        return False
+    calls = entry.get("calls", [])
+    return isinstance(calls, list) and all(isinstance(c, dict) and isinstance(c.get("call"), str) for c in calls)
+
+
 class HandoffStore:
     def __init__(self, state_dir: Path, clock: Callable[[], float] = time.time) -> None:
         self._dir = state_dir / HANDOFF_DIR
@@ -29,11 +36,18 @@ class HandoffStore:
         return self._dir / f"{identity}.json"
 
     def _load(self, identity: str) -> dict[str, Any]:
+        """Kind → work → entry; anything else in the file (an older layout, a hand edit) is left out."""
         try:
             data = json.loads(self._file(identity).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
-        return data if isinstance(data, dict) else {}
+        if not isinstance(data, dict):
+            return {}
+        return {
+            kind: {work: entry for work, entry in works.items() if _entry_ok(entry)}
+            for kind, works in data.items()
+            if isinstance(works, dict)
+        }
 
     def _save(self, identity: str, data: dict[str, Any]) -> None:
         self._dir.mkdir(parents=True, exist_ok=True)

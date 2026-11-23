@@ -3,6 +3,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from whaat.platform.process import detach_options
 from whaat.platform.system import system
 
 # Browsers that open a page as an app window (no tabs, no address bar) with --app; the first one found is used.
@@ -23,7 +24,7 @@ APP_BROWSER_COMMANDS = (
 
 
 def _detached(command: list[str]) -> None:
-    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **detach_options())
 
 
 def open_url(url: str, browser: str | None = None) -> None:
