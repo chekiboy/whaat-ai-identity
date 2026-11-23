@@ -1396,13 +1396,13 @@
       "DoneCall": {
         "additionalProperties": false,
         "properties": {
-          "identity": {
-            "title": "Identity",
+          "report_id": {
+            "title": "Report Id",
             "type": "string"
           }
         },
         "required": [
-          "identity"
+          "report_id"
         ],
         "title": "DoneCall",
         "type": "object"
@@ -3655,10 +3655,17 @@
             ],
             "title": "Kind",
             "type": "string"
+          },
+          "work": {
+            "description": "The curation report's id, or the migration plan's, the session waits for.",
+            "minLength": 1,
+            "title": "Work",
+            "type": "string"
           }
         },
         "required": [
-          "kind"
+          "kind",
+          "work"
         ],
         "title": "NextCall",
         "type": "object"
@@ -6152,7 +6159,7 @@
     },
     "/api/v1/curation/done": {
       "post": {
-        "description": "Done on the page: hand the session-end call with no steps to the waiting curation session, which ends the\ncuration; its terminal is the user's to close.",
+        "description": "Done on the page: hand the session-end call with no steps to the curation session waiting for this report,\nwhich ends the curation; its terminal is the user's to close.",
         "operationId": "send_done",
         "requestBody": {
           "content": {
@@ -6341,7 +6348,7 @@
     },
     "/api/v1/handoff/next": {
       "post": {
-        "description": "The next call for this identity's session of this kind, taken as it is given; also marks the session as\nlistening, so the page hands its next click over instead of showing the call to paste.",
+        "description": "The next call for this identity's session waiting for this work, taken as it is given. An ask that gets\nnothing marks the session as waiting, so the page hands its next click over instead of showing the call.",
         "operationId": "next_call",
         "requestBody": {
           "content": {

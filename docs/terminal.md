@@ -15,12 +15,6 @@ The terminal runs agent sessions inside the app. You pick an identity and a proj
 
 A session that tmux no longer has, for example after a restart of the Mac, is listed as gone until you remove it.
 
-## How the app follows a session
-
-The app watches the last lines of a session to know when to move you between a decision page and the terminal:
-- **Migration** ends a turn that asks you something in the terminal with `[whaat] waiting for your answer`, and the finished run with `[whaat] done`. A turn that waits for your choice on the page ends with neither.
-- **Curation** is closed from the report page: **Done** asks the agent to end the session, waits for its closing line `SESSION-END: nothing open`, then exits the agent.
-
 ## Safety
 
 The terminal runs commands on your machine, so it needs the admin token. It also checks that the page opening a session is Whaat's own, because any website in your browser could try to connect to a local port.

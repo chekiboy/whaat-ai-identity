@@ -394,11 +394,10 @@ def migration_plan_decide(
     command = IMPORT_CALL.format(plan_id=plan_id)
     handoff: HandoffStore = request.app.state.handoff
     detail = None
-    if handoff.listening(identity, "migration"):
-        handoff.put(identity, "migration", command)
+    if handoff.hand(identity, "migration", plan_id, command):
         migration_plans.mark_sent(folder, decided)
     else:
-        detail = "no migration session of this identity waits for the page"
+        detail = "no migration session waits for this plan"
     return MigrationSent(command=command, handed=detail is None, detail=detail)
 
 
@@ -447,9 +446,10 @@ def migration_start(body: MigrationStart, request: Request, principal: Principal
     except AgentTokenMissingError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
     cwd = Path(body.cwd or config).expanduser()
-    command = start_line(launch, request.app.state.preferences.command(), MIGRATE_CALL, cwd)
     handoff: HandoffStore = request.app.state.handoff
-    return MigrationStarted(command=command, waiting=handoff.listening(body.identity, "migration"))
+    return MigrationStarted(
+        command=start_line(launch, MIGRATE_CALL, cwd), waiting=handoff.waiting(body.identity, "migration")
+    )
 
 
 @router.post("/lint", response_model=Text)

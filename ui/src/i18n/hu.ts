@@ -499,17 +499,19 @@ export const hu = {
       retry: "Újra",
       notSent: "Nincs elküldve: {{error}}",
       sentTitle: "Átadva ✓",
-      sentText: "A váró session átvette: {{call}}, és alkalmazza a sorokat.",
+      sentText: "A váró session a következő lekérdezésénél megkapja: {{call}}, és alkalmazza a sorokat.",
       savedTitle: "Elmentve ✓",
       savedText: "Az eldobott sorok a riportba mentődtek; a sessionnek nem ment semmi.",
-      notTyped: "A riportba mentve, de egy session sem vette át: {{detail}}. Ezt másold be a kurálás sessionjébe:",
+      notTyped: "A riportba mentve, de nincs átadva: {{detail}}. Ezt másold be a kurálás sessionjébe:",
+      notHandedTitle: "Nincs átadva",
+      doneNotHanded: "Erre a riportra egy kurálás-session sem vár. Ezt másold be a kurálás sessionjébe:",
       copy: "Másolás",
       copied: "Másolva ✓",
       close: "Bezárás",
       revertTitle: "Visszavonod a(z) {{n}}. alkalmazott sort?",
       revertText:
         "A session git reverttel visszavonja ennek a sornak a commitjait (új commitok, push nélkül), és a sor újra nyitott lesz.",
-      revertSentText: "A váró session átvette: {{call}}.",
+      revertSentText: "A váró session a következő lekérdezésénél megkapja: {{call}}.",
       doneTitle: "Végeztél itt?",
       doneText:
         "A session befejezi, amin még dolgozik, kihagyja a memória- és naplólépést, és lezárja a kurálást. Ha valami még nyitott, inkább megkérdez a termináljában.",
@@ -518,7 +520,7 @@ export const hu = {
       doneSend: "Kész, mehet",
       finishing: "Befejezés…",
       handedDone:
-        "A váró session átvette a session-end hívást: befejezi a munkáját és lezárja a kurálást. A terminálját akkor zárd be, ha jelezte, hogy kész.",
+        "A váró session a következő lekérdezésénél megkapja a session-end hívást: befejezi a munkáját és lezárja a kurálást. A terminálját akkor zárd be, ha jelezte, hogy kész.",
     },
   },
   decisions: {

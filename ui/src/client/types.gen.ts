@@ -876,9 +876,9 @@ export type DistilledAnalysis = {
  */
 export type DoneCall = {
     /**
-     * Identity
+     * Report Id
      */
-    identity: string;
+    report_id: string;
 };
 
 /**
@@ -2289,6 +2289,12 @@ export type NextCall = {
      * Kind
      */
     kind: 'curation' | 'migration';
+    /**
+     * Work
+     *
+     * The curation report's id, or the migration plan's, the session waits for.
+     */
+    work: string;
 };
 
 /**

@@ -70,8 +70,8 @@ files. On a no, stop before the import and say so: until the move, the import re
 The choice is made on the identity's page, not here: give the `url` and say in one message
 what the plan holds, group by group with its counts, the conflicts by name, and the target you propose for each loose
 folder. The page shows whose memory it fills; the user picks the groups, may change a loose folder's layer,
-and sends. Then run `whaat wait migration` (`${CLAUDE_SKILL_DIR}/../../scripts/whaat wait migration`) with
-`run_in_background` and end the turn: when the user sends, it prints `/whaat:memory-migrate import plan=<id>`, which
+and sends. Then run `whaat wait migration --plan <id>`
+(`${CLAUDE_SKILL_DIR}/../../scripts/whaat wait migration --plan <id>`) with `run_in_background` and end the turn: when the user sends, it prints `/whaat:memory-migrate import plan=<id>`, which
 whaat composed from the page; run it as if the user had typed it. Without a waiting session the page shows that call
 for the user to paste. Import nothing before that call comes. If the user writes in chat instead, the chat counts:
 stop the wait first.

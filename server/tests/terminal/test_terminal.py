@@ -363,27 +363,6 @@ def test_an_agent_config_without_a_kept_token_refuses_the_session(terminal: Test
     assert not (config / "settings.json").exists()
 
 
-def test_the_migration_line_starts_in_the_agent_config_unless_a_folder_is_given(
-    terminal: TestClient, tmp_path: Path
-) -> None:
-    terminal.post("/api/v1/identities", json={"id": "agent"}, headers=ADMIN)
-    config, project = tmp_path / "agent-config", tmp_path / "project"
-    config.mkdir()
-    project.mkdir()
-    terminal.patch("/api/v1/preferences", json={"identity": {"agents": {"agent": str(config)}}}, headers=ADMIN)
-
-    started = terminal.post("/api/v1/memory/migration/start", json={"identity": "agent"}, headers=ADMIN).json()
-    chosen = terminal.post(
-        "/api/v1/memory/migration/start", json={"identity": "agent", "cwd": str(project)}, headers=ADMIN
-    ).json()
-
-    assert started["command"].startswith(f"cd {config} && CLAUDE_CONFIG_DIR={config} ")
-    assert started["command"].endswith("/connectors/claude_code /whaat:memory-migrate")
-    assert chosen["command"].startswith(f"cd {project} && ")
-    assert not started["waiting"]
-    assert "WHAAT_TOKEN" in (config / "settings.json").read_text()
-
-
 MARK = "❯"  # noqa: RUF001 - Claude Code's prompt mark
 
 TRUST = f""" Accessing workspace:

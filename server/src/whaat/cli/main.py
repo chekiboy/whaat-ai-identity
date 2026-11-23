@@ -16,6 +16,7 @@ import uvicorn
 
 from whaat.config import Settings, load_settings
 from whaat.git import GitCommitter
+from whaat.handoff.store import WAIT_SECONDS
 from whaat.identities.registry import IdentityRegistry
 from whaat.main import create_app
 from whaat.memory import migration_summary
@@ -744,15 +745,24 @@ def wait_for_decisions(
 @app.command("wait")
 def wait_for_page(
     kind: Annotated[Literal["curation", "migration"], typer.Argument(help="Which page's session waits.")],
-    every: Annotated[float, typer.Option(help="Seconds between two looks.")] = DECISIONS_POLL_SECONDS,
+    report: Annotated[str | None, typer.Option("--report", help="The curation report this session wrote.")] = None,
+    plan: Annotated[str | None, typer.Option("--plan", help="The migration plan this session made.")] = None,
+    every: Annotated[
+        float, typer.Option(min=0.5, max=WAIT_SECONDS / 2, help="Seconds between two looks.")
+    ] = DECISIONS_POLL_SECONDS,
 ) -> None:
-    """Wait until the user acts on the curation or migration page, then print the call whaat composed from it. Run it
-    in the background: it asks the server in short calls, so a server restart in between only delays it."""
+    """Wait until the user acts on the page of this session's curation report or migration plan, then print the call
+    whaat composed from it. Run it in the background: it asks the server in short calls, so a server restart in
+    between only delays it. Every look counts as waiting only for a while, hence the upper bound on `--every`."""
+    work = report if kind == "curation" else plan
+    if not work:
+        typer.echo(f"whaat wait {kind} needs {'--report' if kind == 'curation' else '--plan'}", err=True)
+        raise typer.Exit(2)
     settings = load_settings()
     token = _identity_token(settings)
     while True:
         try:
-            handed = _post_json(settings, "/api/v1/handoff/next", {"kind": kind}, token)
+            handed = _post_json(settings, "/api/v1/handoff/next", {"kind": kind, "work": work}, token)
         except (urllib.error.URLError, ConnectionError, TimeoutError):
             time.sleep(every)
             continue

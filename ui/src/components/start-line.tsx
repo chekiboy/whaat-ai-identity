@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "@/i18n";
 import "@/styles/curation.css";
 
-/** A line for the user to paste into a terminal of their own, with a copy button; whaat never starts a session itself. */
+/** A line for the user to paste into a terminal of their own, with a copy button. */
 export function PasteLine({ line }: { line: string }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);

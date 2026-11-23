@@ -42,7 +42,7 @@ REPORT_CALL = "/whaat:memory-curation report"
 APPLY_CALL = "/whaat:memory-curation apply-rows report={report_id} confirmed=report-page"
 REVERT_CALL = "/whaat:memory-curation revert-applied-rows report={report_id} rows={n} confirmed=report-page"
 DONE_CALL = "/whaat:session-end steps=none confirmed=report-page"
-NOBODY_WAITS = "no curation session of this identity waits for the page"
+NOBODY_WAITS = "no curation session waits for this report"
 
 
 def _journal(request: Request) -> JournalService:
@@ -72,16 +72,13 @@ def _document(journal: JournalService, report_id: str) -> tuple[str, CurationRep
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
 
 
-def _hand(handoff: HandoffStore, identity: str, call: str) -> str | None:
-    """Hand the call to the identity's waiting curation session; the reason it was not handed, or None."""
-    if not handoff.listening(identity, "curation"):
-        return NOBODY_WAITS
-    handoff.put(identity, "curation", call)
-    return None
+def _hand(handoff: HandoffStore, identity: str, report_id: str, call: str) -> str | None:
+    """Hand the call to the curation session waiting for this report; the reason it was not handed, or None."""
+    return None if handoff.hand(identity, "curation", report_id, call) else NOBODY_WAITS
 
 
 @router.post("/start", response_model=CurationStarted)
-def start_curation(body: StartCuration, request: Request, _: AdminDep) -> CurationStarted:
+def start_curation(body: StartCuration, request: Request, _: AdminDep, handoff: HandoffDep) -> CurationStarted:
     """The line that starts memory-curation's report as this identity, with its own agent config, for the user to
     paste into a terminal."""
     registry: IdentityRegistry = request.app.state.registry
@@ -97,8 +94,9 @@ def start_curation(body: StartCuration, request: Request, _: AdminDep) -> Curati
             detail=f"{body.identity} has no agent config: set its Claude config folder in Settings first",
         )
     cwd = Path(body.cwd).expanduser() if body.cwd else None
-    command = start_line(launch, request.app.state.preferences.command(), REPORT_CALL, cwd)
-    return CurationStarted(command=command, waiting=request.app.state.handoff.listening(body.identity, "curation"))
+    return CurationStarted(
+        command=start_line(launch, REPORT_CALL, cwd), waiting=handoff.waiting(body.identity, "curation")
+    )
 
 
 @router.get("/view", response_model=curation_view.CurationView)
@@ -135,7 +133,7 @@ def send_decisions(body: SendDecisions, _: AdminDep, handoff: HandoffDep, journa
     if not applying:
         detail: str | None = "only discarded rows: nothing to apply, the decisions are saved"
     else:
-        detail = _hand(handoff, identity, command)
+        detail = _hand(handoff, identity, body.report_id, command)
     at = None
     if detail is None:
         at = _now()
@@ -151,7 +149,7 @@ def send_revert(body: RevertRow, _: AdminDep, handoff: HandoffDep, journal: Jour
     if row is None or not (row.applied or "").strip(" —"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="rows must be applied rows of this report")
     command = REVERT_CALL.format(report_id=body.report_id, n=body.n)
-    detail = _hand(handoff, identity, command)
+    detail = _hand(handoff, identity, body.report_id, command)
     if detail is None:
         journal.mark_curation_sent(body.report_id, [body.n], None)
     return DecisionsSent(
@@ -165,10 +163,11 @@ def send_revert(body: RevertRow, _: AdminDep, handoff: HandoffDep, journal: Jour
 
 
 @router.post("/done", response_model=DecisionsSent)
-def send_done(body: DoneCall, _: AdminDep, handoff: HandoffDep) -> DecisionsSent:
-    """Done on the page: hand the session-end call with no steps to the waiting curation session, which ends the
-    curation; its terminal is the user's to close."""
-    detail = _hand(handoff, body.identity, DONE_CALL)
+def send_done(body: DoneCall, _: AdminDep, handoff: HandoffDep, journal: JournalDep) -> DecisionsSent:
+    """Done on the page: hand the session-end call with no steps to the curation session waiting for this report,
+    which ends the curation; its terminal is the user's to close."""
+    identity = _document(journal, body.report_id)[0]
+    detail = _hand(handoff, identity, body.report_id, DONE_CALL)
     return DecisionsSent(
         commit=None,
         warnings=[],

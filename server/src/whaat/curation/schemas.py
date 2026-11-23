@@ -51,4 +51,4 @@ class RevertRow(Strict):
 
 
 class DoneCall(Strict):
-    identity: str
+    report_id: str

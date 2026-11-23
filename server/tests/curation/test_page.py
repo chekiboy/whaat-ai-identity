@@ -42,9 +42,10 @@ def row(n: int, file: str, action: str, target: str | None = None, applied: str 
     }
 
 
-def waiting_session(client: TestClient) -> None:
-    """The curation session's `whaat wait curation` asks once, so the page hands its clicks over."""
-    assert client.post("/api/v1/handoff/next", json={"kind": "curation"}, headers=CLAUDE).json()["call"] is None
+def waiting_session(client: TestClient, report_id: str) -> None:
+    """The curation session's `whaat wait curation --report` asks once, so the page hands its clicks over."""
+    body = {"kind": "curation", "work": report_id}
+    assert client.post("/api/v1/handoff/next", json=body, headers=CLAUDE).json()["call"] is None
 
 
 def test_the_view_counts_the_map_as_the_live_page_and_draws_each_row(app: TestClient, settings: Settings) -> None:
@@ -82,7 +83,7 @@ def test_a_sent_row_is_stamped_refused_again_and_open_again_after_a_revert(app: 
     report_id = report(
         app, [row(1, "feedback_a.md", "verify"), row(2, "feedback_b.md", "fix", "the fix", applied="store abc")]
     )
-    waiting_session(app)
+    waiting_session(app, report_id)
     send = {"report_id": report_id, "rows": [{"n": 1, "decision": "apply"}]}
 
     first = app.post("/api/v1/curation/decisions", json=send, headers=ADMIN).json()

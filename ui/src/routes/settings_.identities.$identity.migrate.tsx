@@ -45,10 +45,9 @@ const short = (path: string) => path.replace(/^\/(Users|home)\/[^/]+/, "~");
 
 /** How often the page asks for the identity's plans, so the one the migration session saves shows up by itself. */
 const PLAN_POLL_MS = 3000;
-/** The label whaat gives the migration's terminal session; a question it asks takes the user there. */
 
 /* The identity's page for bringing existing memory in: who the memory goes to is the subject of the page, the
-   user picks the groups and a loose folder's layer here, and Send types the import into the migration session. */
+   user picks the groups and a loose folder's layer here, and Send hands the import to the migration session. */
 function Migrate() {
   const { identity } = Route.useParams();
   const { plan: planId } = Route.useSearch();

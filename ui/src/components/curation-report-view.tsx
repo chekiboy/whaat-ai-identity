@@ -282,7 +282,7 @@ export function CurationReportView({
         pending={done.isPending}
         onConfirm={(setError) =>
           done.mutate(
-            { body: { identity: identity ?? "" } },
+            { body: { report_id: reportId } },
             {
               onSuccess: (result) =>
                 setModal(
@@ -296,7 +296,15 @@ export function CurationReportView({
                       </div>
                     </Modal>
                   ) : (
-                    <SentModal result={result} applied={1} onClose={close} />
+                    <Modal title={t("curation.modal.notHandedTitle")} onClose={close}>
+                      <p>{t("curation.modal.doneNotHanded")}</p>
+                      <div className="cur-actions">
+                        <PasteLine line={result.command} />
+                        <button type="button" onClick={close}>
+                          {t("curation.modal.close")}
+                        </button>
+                      </div>
+                    </Modal>
                   ),
                 ),
               onError: (error) => setError(errorText(error)),

@@ -1,5 +1,5 @@
 """The waiting session's side: `whaat wait <kind>` asks here in short calls with the identity's token and gets the
-next call the page handed over, or nothing yet."""
+next call the page handed over for its work, or nothing yet."""
 
 from typing import Annotated
 
@@ -16,6 +16,9 @@ IdentityDep = Annotated[str, Depends(require_identity)]
 
 class NextCall(Strict):
     kind: Kind
+    work: str = Field(
+        min_length=1, description="The curation report's id, or the migration plan's, the session waits for."
+    )
 
 
 class Handed(BaseModel):
@@ -26,7 +29,7 @@ class Handed(BaseModel):
 
 @router.post("/next", response_model=Handed)
 def next_call(body: NextCall, request: Request, identity: IdentityDep) -> Handed:
-    """The next call for this identity's session of this kind, taken as it is given; also marks the session as
-    listening, so the page hands its next click over instead of showing the call to paste."""
+    """The next call for this identity's session waiting for this work, taken as it is given. An ask that gets
+    nothing marks the session as waiting, so the page hands its next click over instead of showing the call."""
     store: HandoffStore = request.app.state.handoff
-    return Handed(call=store.take(identity, body.kind))
+    return Handed(call=store.take(identity, body.kind, body.work))

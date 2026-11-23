@@ -50,8 +50,8 @@ export const discardedProposals = <ThrowOnError extends boolean = false>(options
 /**
  * Send Done
  *
- * Done on the page: hand the session-end call with no steps to the waiting curation session, which ends the
- * curation; its terminal is the user's to close.
+ * Done on the page: hand the session-end call with no steps to the curation session waiting for this report,
+ * which ends the curation; its terminal is the user's to close.
  */
 export const sendDone = <ThrowOnError extends boolean = false>(options: Options<SendDoneData, ThrowOnError>): RequestResult<SendDoneResponses, SendDoneErrors, ThrowOnError> => (options.client ?? client).post<SendDoneResponses, SendDoneErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -109,8 +109,8 @@ export const curationPage = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Next Call
  *
- * The next call for this identity's session of this kind, taken as it is given; also marks the session as
- * listening, so the page hands its next click over instead of showing the call to paste.
+ * The next call for this identity's session waiting for this work, taken as it is given. An ask that gets
+ * nothing marks the session as waiting, so the page hands its next click over instead of showing the call.
  */
 export const nextCall = <ThrowOnError extends boolean = false>(options: Options<NextCallData, ThrowOnError>): RequestResult<NextCallResponses, NextCallErrors, ThrowOnError> => (options.client ?? client).post<NextCallResponses, NextCallErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

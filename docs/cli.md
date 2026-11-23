@@ -56,7 +56,7 @@ More: [Memory](memory.md).
 | `whaat journal discarded` | Proposals you rejected earlier |
 | `whaat decisions save` | Saves a decisions page read from stdin and prints its address |
 | `whaat decisions wait` | Waits until you answer a decisions page, then prints your answer, one line per question |
-| `whaat wait curation` / `whaat wait migration` | Waits until you act on the curation or migration page, then prints the call whaat composed from it |
+| `whaat wait curation --report <id>` / `whaat wait migration --plan <id>` | Waits until you act on that report's or plan's page, then prints the call whaat composed from it |
 
 More: [Curation](curation.md).
 

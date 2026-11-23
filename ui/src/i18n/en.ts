@@ -497,17 +497,19 @@ export const en = {
       retry: "Retry",
       notSent: "Not sent: {{error}}",
       sentTitle: "Handed over ✓",
-      sentText: "The waiting session took {{call}} and applies the rows.",
+      sentText: "The waiting session gets {{call}} on its next look and applies the rows.",
       savedTitle: "Saved ✓",
       savedText: "The discarded rows are saved in the report; nothing was sent to the session.",
-      notTyped: "Saved in the report, but not handed to a session: {{detail}}. Paste this into the curation session:",
+      notTyped: "Saved in the report, but not handed over: {{detail}}. Paste this into the curation session:",
+      notHandedTitle: "Not handed over",
+      doneNotHanded: "No curation session waits for this report. Paste this into the curation session:",
       copy: "Copy",
       copied: "Copied ✓",
       close: "Close",
       revertTitle: "Revert applied row {{n}}?",
       revertText:
         "The session reverts the commits of this row with git revert (new commits, nothing pushed) and the row becomes open again.",
-      revertSentText: "The waiting session took {{call}}.",
+      revertSentText: "The waiting session gets {{call}} on its next look.",
       doneTitle: "Done here?",
       doneText:
         "The session finishes what it is still doing, skips the memory and journal steps, and ends the curation. If something is still open, it asks you in its terminal instead.",
@@ -516,7 +518,7 @@ export const en = {
       doneSend: "Done, send it",
       finishing: "Finishing…",
       handedDone:
-        "The waiting session took the session-end call: it finishes its work and ends the curation. Close its terminal once it says it is done.",
+        "The waiting session gets the session-end call on its next look: it finishes its work and ends the curation. Close its terminal once it says it is done.",
     },
   },
   decisions: {

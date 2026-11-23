@@ -85,11 +85,11 @@ about this run: the store is shared and nobody reviewed the report yet. After th
 
 ## Waiting for the page
 
-Run `W wait curation` with `run_in_background` and end the turn; the session wakes when it ends. It prints one call,
-which whaat composed from the user's click on the report page: `/whaat:memory-curation apply-rows …`,
-`/whaat:memory-curation revert-applied-rows …` or `/whaat:session-end steps=none confirmed=report-page`. Run it as
-the skill and operation it names, with its arguments, as if the user had typed it: it is their word from the page,
-`confirmed=report-page` included. After an apply-rows or revert-applied-rows run, start the wait again; after the
+Run `W wait curation --report <report_id>` (the report this session saved) with `run_in_background` and end the
+turn; the session wakes when it ends. It prints one call, which whaat composed from the user's click on that report's
+page: `/whaat:memory-curation apply-rows …`, `/whaat:memory-curation revert-applied-rows …` or
+`/whaat:session-end steps=none confirmed=report-page`. Run it as the skill and operation it names, with its
+arguments, as if the user had typed it: it is their word from the page, `confirmed=report-page` included. After an apply-rows or revert-applied-rows run, start the wait again; after the
 session-end call, don't. If the user writes in chat instead, the chat counts: stop the wait first.
 
 ## apply-rows
