@@ -396,14 +396,3 @@
   font: inherit;
   color: inherit;
 }
-
-.mg-pick {
-  margin: 16px 24px 8px;
-  color: var(--cream2);
-}
-.mg-picker {
-  display: flex;
-  height: max(320px, calc(100vh - 300px));
-  margin: 0 24px;
-  border: 1px solid var(--edge2);
-}

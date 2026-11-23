@@ -36,7 +36,7 @@ export function ReportsModuleBar({ session, current }: { session?: string | null
       )}
       <ModuleBarSection title={t("shell.reports")}>
         <Link to="/reports/sessions" className="sh-item" activeProps={{ className: "sh-item on" }}>
-          {t("terminal.sessions")}
+          {t("reports.sessions")}
           <span className="c">{groups.length}</span>
         </Link>
         <Link

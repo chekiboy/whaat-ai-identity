@@ -7,8 +7,8 @@ import {
   updatePreferencesMutation,
 } from "@/client/@tanstack/react-query.gen";
 
-/** The preferences the server keeps for this instance (language, the identity it opens with, terminal command, theme,
-    saved folders). */
+/** The preferences the server keeps for this instance: the language, the identity it opens with, and each identity's
+    agent config folder. */
 export function usePreferences() {
   const queryClient = useQueryClient();
   const query = useQuery({ ...getPreferencesOptions(), staleTime: 30_000 });

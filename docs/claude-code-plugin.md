@@ -23,7 +23,7 @@ Details: [Memory](memory.md), [Curation](curation.md), [Migration](migration.md)
 
 ## Hooks
 
-Hooks are small scripts Claude Code runs by itself at fixed moments, such as a session start or a file read. Whaat's hooks never stop the session: when they decline something, they answer with what to do instead.
+Hooks are small scripts Claude Code runs by itself at fixed moments, such as a session start or a file read. Each runs through uv in exec form (`uv run --no-project --no-config python <hook>`), so it needs no shell and no particular name for Python, on any system, and the session repo's Python pins do not reach it. Exec-form hooks need Claude Code 2.1.139 or newer. Whaat's hooks never stop the session: when they decline something, they answer with what to do instead.
 
 | Hook | When | What it does |
 |---|---|---|
@@ -34,6 +34,12 @@ Hooks are small scripts Claude Code runs by itself at fixed moments, such as a s
 | `recall-guard` | Before a file read | Declines a direct read of a memory file and names the recall command to use instead |
 | `memory-write-guard` | Before a file write | Declines writes into Claude Code's own memory folders and says where the memory goes in Whaat |
 | `memory-outcome` | After a file read | Logs a read of a memory, and warns when it is history, uncertain or stale |
+
+## With Claude Code's sandbox on
+
+The skills run the `whaat` commands (`scripts/whaat`, through uv), and every command talks to the Whaat server on `127.0.0.1` and may start it. Inside Claude Code's sandbox that fails: the server is out of reach, and the state folder and uv's cache cannot be written. Allow the `whaat` commands, either by letting them run outside the sandbox or by allowing the server's port, the state folder and uv's cache (`uv cache dir`) in the sandbox settings (`/sandbox`). A command that can neither reach nor start the server says so and names the port and the state folder; when uv's cache is not writable, uv itself stops first, with its own error.
+
+The hooks run outside the Bash tool, through uv, so the sandbox does not stop them.
 
 ## Why a recall rule in `CLAUDE.md` too
 

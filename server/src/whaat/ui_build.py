@@ -13,7 +13,7 @@ from whaat.config import REPO_UI_DIR
 BUILD_TIMEOUT_SECONDS = 300
 # where pnpm usually is when the server's PATH lacks it: an app started from the Finder gets only
 # /usr/bin:/bin:/usr/sbin:/sbin (Whaat (dev).app's ↻ answered 409 four times on 2026-11-09)
-PNPM_DIRS = ("/opt/homebrew/bin", "/usr/local/bin", "~/.local/bin", "~/Library/pnpm")
+PNPM_DIRS = ("/opt/homebrew/bin", "/usr/local/bin", "~/.local/bin", "~/Library/pnpm", "~/.local/share/pnpm")
 OUTPUT_TAIL_LINES = 20
 
 

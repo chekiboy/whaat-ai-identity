@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -178,3 +179,14 @@ def test_the_older_names_still_work_when_the_own_ones_are_not_set(
 def test_shared_reports_in_another_shape_are_refused(raw: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(SharedReportsConfigError):
         settings_with({"WHAAT_SHARED_REPORTS": raw}, tmp_path, monkeypatch)
+
+
+def test_the_memory_repo_roots_are_split_with_the_system_s_path_separator(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(os, "pathsep", ";")
+    monkeypatch.setenv("MEMORY_REPO_ROOTS", "C:/repos;D:/more")
+
+    settings = load_settings(tmp_path / "no-settings.json")
+
+    assert [root.as_posix() for root in settings.memory_repo_roots] == ["C:/repos", "D:/more"]

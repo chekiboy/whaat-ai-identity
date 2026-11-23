@@ -10,7 +10,6 @@ import { useTranslation } from "@/i18n";
 import { usePageHeading } from "@/lib/breadcrumb";
 import { useDayName } from "@/lib/day";
 import { usePersona } from "@/lib/persona";
-import { TERMINAL_COMMAND } from "@/lib/terminal";
 import "@/styles/overview.css";
 
 export const Route = createFileRoute("/")({
@@ -128,10 +127,6 @@ function Home() {
       <div className="sh-tb">
         <h1>{t("home.title")}</h1>
         <span className="meta">{persona}</span>
-        <span className="grow" />
-        <Link to="/terminal" className="ov-tbterm">
-          ▸ {TERMINAL_COMMAND}
-        </Link>
       </div>
       <section className="ov-who" id="ov-who">
         <div className="ov-who-main">
@@ -292,11 +287,6 @@ function Home() {
               </div>
             )}
             <p className="ov-later">{t("home.decisionsLater")}</p>
-            <h3 className="ov-sub">{t("home.start")}</h3>
-            <Link to="/terminal" className="ov-term">
-              <span>▸</span> {t("home.startCommand", { command: TERMINAL_COMMAND })}
-              <em>{persona}</em>
-            </Link>
             <p className="ov-k">
               <kbd>⌘K</kbd> {t("home.searchHint")}
             </p>

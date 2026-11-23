@@ -1,11 +1,11 @@
 import hashlib
-import os
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
 
 from whaat.config import IDENTITY_ID, Settings, instance_identity_folder, same_identity
 from whaat.git import GitCommitError, GitCommitter
+from whaat.platform.files import write_private
 from whaat.reports.service import PRIVATE_MARKER
 from whaat.reports.store import Root, roots_from
 
@@ -46,13 +46,6 @@ class Principal:
 
 
 ADMIN = Principal(None)
-
-
-def _write_private(path: Path, text: str) -> None:
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    os.fchmod(descriptor, 0o600)  # the mode of os.open holds only for a new file
-    with os.fdopen(descriptor, "w", encoding="utf-8") as file:
-        file.write(text)
 
 
 def _digest(token: str) -> str:
@@ -139,10 +132,10 @@ class IdentityRegistry:
         self._tokens_dir.mkdir(parents=True, exist_ok=True)
         self._tokens_dir.chmod(0o700)
         token = secrets.token_urlsafe(32)
-        _write_private(self._tokens_dir / identity, _digest(token))
+        write_private(self._tokens_dir / identity, _digest(token))
         self._secrets_dir.mkdir(parents=True, exist_ok=True)
         self._secrets_dir.chmod(0o700)
-        _write_private(self._secrets_dir / identity, token)
+        write_private(self._secrets_dir / identity, token)
         return token
 
     def _create_folder(self, folder: Path, identity: str) -> list[str]:

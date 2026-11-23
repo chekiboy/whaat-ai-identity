@@ -13,7 +13,6 @@ One page per module, each saying what the module is for, how it behaves and whic
 | [Claude Code plugin](claude-code-plugin.md) | The skills and hooks that connect Claude Code to Whaat |
 | [MCP layer](mcp.md) | The same memory and journal for any MCP client |
 | [Command line](cli.md) | Every `whaat` command in one list |
-| [Terminal](terminal.md) | Agent sessions that run inside the app (experimental) |
 | [The app](app.md) | The pages of the UI and its settings |
 
 ## Words used on every page

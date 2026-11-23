@@ -1,6 +1,10 @@
+import os
 import shutil
 import subprocess
 from pathlib import Path
+
+from whaat.platform.process import detach_options
+from whaat.platform.system import system
 
 # Browsers that open a page as an app window (no tabs, no address bar) with --app; the first one found is used.
 APP_BROWSER_PATHS = (
@@ -19,13 +23,27 @@ APP_BROWSER_COMMANDS = (
 )
 
 
+def _detached(command: list[str]) -> None:
+    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **detach_options())
+
+
 def open_url(url: str, browser: str | None = None) -> None:
-    """macOS `open`, in the named browser application when one is given."""
-    subprocess.run(["open", *(["-a", browser] if browser else []), url], check=True)
+    """`browser` is an app name on macOS and a command elsewhere. Off macOS the opener may stay in the foreground
+    until the browser closes, so it runs detached."""
+    kind = system()
+    if kind == "macos":
+        subprocess.run(["open", *(["-a", browser] if browser else []), url], check=True)
+    elif browser:
+        _detached([browser, url])
+    elif kind == "windows":
+        getattr(os, "startfile")(url)  # noqa: B009 - os.startfile exists only on Windows
+    else:
+        opener = shutil.which("wslview") if kind == "wsl" else None
+        _detached([opener or "xdg-open", url])
 
 
 def app_browser() -> str | None:
-    for path in APP_BROWSER_PATHS:
+    for path in APP_BROWSER_PATHS if system() == "macos" else ():
         if Path(path).exists():
             return path
     for command in APP_BROWSER_COMMANDS:
@@ -52,10 +70,5 @@ def open_app_window(url: str, profile: Path) -> bool:
     browser = app_browser()
     if browser is None:
         return False
-    subprocess.Popen(
-        app_window_command(browser, url, profile),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-    )
+    _detached(app_window_command(browser, url, profile))
     return True

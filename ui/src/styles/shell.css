@@ -55,7 +55,6 @@
 .shell textarea,
 .shell .rp,
 .shell .mem-sheet,
-.shell .tm-tx,
 .shell .ab {
   user-select: text;
   -webkit-user-select: text;
@@ -668,30 +667,6 @@
   opacity: 0.55;
   cursor: default;
 }
-.sh-setting {
-  display: grid;
-  gap: 4px;
-  margin: 2px 14px 0 18px;
-  padding: 10px 12px;
-  background: var(--bg3);
-  border: 1px solid var(--edge2);
-}
-.sh-setting span {
-  font: 600 10px var(--mono);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.sh-setting code {
-  font: 600 14px var(--mono);
-  color: var(--phos);
-  text-shadow: 0 0 8px rgb(255 199 107 / 0.4);
-}
-.sh-setting em {
-  font: 500 11px var(--mono);
-  font-style: normal;
-  color: var(--muted);
-}
 
 /* the toolbar each view starts with, in place of a page title */
 .sh-tb {
@@ -834,20 +809,4 @@
 }
 .sh-stopped p {
   color: var(--muted);
-}
-/* the Terminal's "experimental" mark */
-.sh-experimental {
-  align-self: center;
-  margin-left: 12px;
-  padding: 2px 8px;
-  border: 1px dashed var(--orange);
-  font: 600 10px var(--font-mono);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--orange);
-  transform: rotate(-2deg);
-}
-.sh-exp-tip {
-  font-style: normal;
-  color: var(--orange);
 }

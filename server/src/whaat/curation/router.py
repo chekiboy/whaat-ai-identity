@@ -10,6 +10,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from whaat.agent import AgentTokenMissingError
 from whaat.curation import view as curation_view
 from whaat.curation.schemas import (
     CurationStarted,
@@ -31,7 +32,6 @@ from whaat.memory.service import MEMORY_DIR
 from whaat.memory.validity import commit_dates
 from whaat.reports.store import PRIVATE_ROOT_PREFIX
 from whaat.security import require_admin, require_identity
-from whaat.terminal.agent import AgentTokenMissingError
 
 router = APIRouter(prefix="/api/v1/curation", tags=["curation"])
 AdminDep = Annotated[Principal, Depends(require_admin)]

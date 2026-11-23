@@ -4,6 +4,20 @@ What changed in each version of whaat. The format follows [Keep a Changelog](htt
 
 ## Unreleased
 
+### Added
+
+- **Linux, and WSL2 on Windows.** Whaat reads which system it runs on in one place (`platform/system.py`) and acts on it: the state folder is the XDG data folder on Linux and WSL (`$XDG_DATA_HOME/whaat`, else `~/.local/share/whaat`), links open with `xdg-open`, or in the Windows browser through `wslview` on WSL, and `MEMORY_REPO_ROOTS` is split with the system's path separator. `WHAAT_STATE_DIR` still wins. The server's tests and a server start pass on Debian Linux; WSL2 has not been tried yet. macOS installs keep their state folder.
+- **Native Windows groundwork, not tried on Windows yet.** The PowerShell start line stops when its folder is missing and puts `CLAUDE_CONFIG_DIR` back when claude ends (run in real PowerShell); the plugin's hooks run through uv in exec form, so they need neither a shell nor a `python3` name; the hook starts the server through uv rather than the bash launcher; token files are written without `os.fchmod`, which Windows lacks before Python 3.13; processes are detached with Windows' creation flags; the server's port is held with `SO_EXCLUSIVEADDRUSE`; a `C:\` origin counts as a local folder. The skills still call the bash launcher, so on Windows they need Git for Windows, which Claude Code's Bash tool needs too.
+- **A `whaat` command that can neither reach nor start the server** (inside Claude Code's sandbox, for example) says so and names the port and the state folder to allow, instead of a traceback; a start that times out names them too.
+- **The plugin's hooks need Claude Code 2.1.139 or newer**, which runs exec-form hooks.
+
+### Removed
+
+- **The experimental terminal**, with everything that existed only for it: the Terminal page and its menu item, tmux sessions, opening a session in Terminal or iTerm2, the machine's terminal themes, the saved project folders, and the terminal part of Settings (start command, where sessions open, colour theme). The server no longer needs tmux, and the UI no longer ships xterm. Curation and migration start from a line you paste into a terminal of your own (below).
+- **API.** The `/api/v1/terminal/*` routes, and the `terminal` part of the preferences; an older preferences file loses it on its next save.
+- **Configuration.** `WHAAT_TERMINAL_COMMAND` and `WHAAT_TERMINAL_CWD`.
+- **Left behind by an earlier version.** Its terminal sessions keep running on their own tmux server until you stop them with `tmux -L whaat-<instance> kill-server` (`whaat-live` for the default instance), and `<state dir>/terminal/` can be deleted.
+
 ### Changed
 
 - **Curation and migration no longer run in the app's terminal.** **Start curation** and the migration's start button show a line to paste into a terminal of your own; it starts the agent as the identity, in PowerShell syntax on Windows. The session then waits for the page of its own report or plan in the background (`whaat wait curation --report <id>`, `whaat wait migration --plan <id>`), and each click on that page reaches it through whaat instead of being typed into a tmux session. A call waits on disk until the session takes it, so a server restart in between loses nothing; one no session took within 10 minutes is dropped, never run later. When no session waits for that report or plan, the page shows the call to paste, as before.
