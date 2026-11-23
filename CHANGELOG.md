@@ -4,6 +4,10 @@ What changed in each version of whaat. The format follows [Keep a Changelog](htt
 
 ## Unreleased
 
+### Added
+
+- **Linux, and WSL2 on Windows.** Whaat reads which system it runs on in one place (`platform/system.py`) and acts on it: the state folder is the XDG data folder on Linux and WSL (`$XDG_DATA_HOME/whaat`, else `~/.local/share/whaat`), links open with `xdg-open`, or in the Windows browser through `wslview` on WSL, and `MEMORY_REPO_ROOTS` is split with the system's path separator. `WHAAT_STATE_DIR` still wins. The server's tests and a server start pass on Debian Linux; WSL2 has not been tried yet. macOS installs keep their state folder.
+
 ### Removed
 
 - **The experimental terminal**, with everything that existed only for it: the Terminal page and its menu item, tmux sessions, opening a session in Terminal or iTerm2, the machine's terminal themes, the saved project folders, and the terminal part of Settings (start command, where sessions open, colour theme). The server no longer needs tmux, and the UI no longer ships xterm. Curation and migration start from a line you paste into a terminal of your own (below).

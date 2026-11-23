@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from whaat.identities.registry import IdentityRegistry, Principal
+from whaat.platform.paths import make_state_dir
 
 TOKEN_FILE_NAME = "token"
 
@@ -20,7 +21,7 @@ def load_or_create_token(state_dir: Path) -> str:
     path = token_file(state_dir)
     if path.exists():
         return path.read_text(encoding="utf-8").strip()
-    state_dir.mkdir(parents=True, exist_ok=True)
+    make_state_dir(state_dir)
     token = secrets.token_urlsafe(32)
     path.write_text(token, encoding="utf-8")
     path.chmod(0o600)

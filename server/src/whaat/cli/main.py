@@ -23,6 +23,7 @@ from whaat.main import create_app
 from whaat.memory import migration_summary
 from whaat.platform.browser import open_app_window, open_url
 from whaat.platform.instance_lock import InstanceRunningError, bind_listener
+from whaat.platform.paths import make_state_dir
 from whaat.platform.process import spawn_detached
 from whaat.platform.repo_key import repo_key
 from whaat.reports.store import report_key
@@ -107,7 +108,7 @@ def _start_unless_running(settings: Settings) -> str:
     where = f"{settings.instance} on {settings.public_url}"
     if running_instance(settings, _probe(settings)):
         return f"whaat {where} already runs"
-    settings.state_dir.mkdir(parents=True, exist_ok=True)
+    make_state_dir(settings.state_dir)
     log_path = settings.state_dir / SERVER_LOG_NAME
     with log_path.open("ab") as log:
         spawn_detached([sys.executable, "-m", "whaat", "serve"], log)
@@ -194,8 +195,25 @@ def connect(
     typer.echo(f"whaat's recall rule is in {plugin_file.parent / 'CLAUDE.md'}")
 
 
+def _open_or_say(url: str, browser: str | None) -> None:
+    """Open the page; when no browser could be started, print the address so the user can open it."""
+    try:
+        open_url(url, browser)
+    except (OSError, subprocess.CalledProcessError) as err:
+        typer.echo(f"could not open a browser ({err}); open it yourself:", err=True)
+        typer.echo(url)
+        raise typer.Exit(1) from err
+
+
 def report_url(settings: Settings, report_id: str) -> str:
     return f"{settings.public_url}/ui/reports/{report_key(report_id)}"
+
+
+@app.command("state-dir")
+def print_state_dir() -> None:
+    """Print this instance's state folder (where the admin token is), so tools outside the server need not know the
+    rule; WHAAT_INSTANCE and WHAAT_STATE_DIR count as for the server."""
+    typer.echo(load_settings().state_dir)
 
 
 @app.command("open")
@@ -204,7 +222,7 @@ def open_report(report_id: Annotated[str, typer.Argument(help="The report's id, 
     settings = load_settings()
     typer.echo(_ensure_running(settings), err=True)
     url = report_url(settings, report_id)
-    open_url(url, settings.browser)
+    _open_or_say(url, settings.browser)
     typer.echo(url)
 
 
@@ -237,7 +255,7 @@ def open_app() -> None:
     url = f"{settings.public_url}/ui/"
     if not open_app_window(url, settings.state_dir / APP_PROFILE_DIR):
         typer.echo("no Chrome, Chromium, Edge or Brave found: opening the default browser", err=True)
-        open_url(url, settings.browser)
+        _open_or_say(url, settings.browser)
     typer.echo(url)
 
 

@@ -5,7 +5,7 @@ import shlex
 from pathlib import Path
 
 from whaat.agent import Launch
-from whaat.platform.system import windows
+from whaat.platform.system import system
 
 
 def _ps(text: str) -> str:
@@ -14,7 +14,7 @@ def _ps(text: str) -> str:
 
 def start_line(launch: Launch, prompt: str, cwd: Path | None = None, powershell: bool | None = None) -> str:
     """`launch` is the identity's agent config: its config dir and whaat's plugin."""
-    if windows() if powershell is None else powershell:
+    if system() == "windows" if powershell is None else powershell:
         parts = [f"Set-Location {_ps(str(cwd))}"] if cwd else []
         parts += [f"$env:{key}={_ps(value)}" for key, value in launch.env.items()]
         return "; ".join([*parts, f"{launch.command} {_ps(prompt)}"])

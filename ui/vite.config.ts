@@ -1,5 +1,5 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -9,11 +9,18 @@ import { defineConfig } from "vitest/config";
 
 const SERVER = process.env.WHAAT_SERVER ?? "http://127.0.0.1:1111";
 
+/** The server knows where its state folder is on this system; asking it keeps the rule in one place. */
+function stateDir(): string {
+  return execFileSync("uv", ["run", "--quiet", "whaat", "state-dir"], {
+    cwd: resolve(import.meta.dirname, "../server"),
+    encoding: "utf8",
+  }).trim();
+}
+
 function serverToken(): string {
   if (process.env.WHAAT_TOKEN) return process.env.WHAAT_TOKEN;
-  const stateDir = process.env.WHAAT_STATE_DIR ?? join(homedir(), "Library", "Application Support", "whaat");
   try {
-    return readFileSync(join(stateDir, "token"), "utf8").trim();
+    return readFileSync(join(process.env.WHAAT_STATE_DIR ?? stateDir(), "token"), "utf8").trim();
   } catch {
     return "";
   }

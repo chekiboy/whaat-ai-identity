@@ -202,7 +202,7 @@ def load_settings(settings_file: Path | None = None) -> Settings:
         agent_token=lookup("WHAAT_TOKEN"),
         memory_repo_roots=tuple(
             Path(root).expanduser()
-            for root in (lookup("MEMORY_REPO_ROOTS") or DEFAULT_MEMORY_REPO_ROOTS).split(":")
+            for root in (lookup("MEMORY_REPO_ROOTS") or DEFAULT_MEMORY_REPO_ROOTS).split(os.pathsep)
             if root
         ),
     )
