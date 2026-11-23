@@ -14,7 +14,6 @@ HOSTNAME_SUFFIX = "whaat.localhost"
 DEFAULT_IDENTITY = "wHaat"
 # the older name of WHAAT_LIVE_IDENTITIES: CLAUDE_PRIVATE_ARCHIVE is this identity's folder on the live instance
 ARCHIVE_IDENTITY = "claude"
-DEFAULT_TERMINAL_COMMAND = "claude"
 # where memory-lint looks for local clones to check stale paths against; none unless MEMORY_REPO_ROOTS names them
 DEFAULT_MEMORY_REPO_ROOTS = ""
 # the older names of WHAAT_SHARED_REPORTS: each names one shared root, whose report dirs are fixed
@@ -59,8 +58,6 @@ class Settings:
     ui_dir: Path | None = None
     browser: str | None = None
     agent_token: str | None = None
-    terminal_command: str = DEFAULT_TERMINAL_COMMAND
-    terminal_cwd: Path | None = None
     memory_repo_roots: tuple[Path, ...] = ()
 
     def __post_init__(self) -> None:
@@ -203,8 +200,6 @@ def load_settings(settings_file: Path | None = None) -> Settings:
         ui_dir=Path(custom_ui_dir).expanduser() if custom_ui_dir else REPO_UI_DIR,
         browser=lookup("WHAAT_BROWSER") or lookup("CLAUDE_REPORT_BROWSER"),
         agent_token=lookup("WHAAT_TOKEN"),
-        terminal_command=lookup("WHAAT_TERMINAL_COMMAND") or DEFAULT_TERMINAL_COMMAND,
-        terminal_cwd=Path(cwd).expanduser() if (cwd := lookup("WHAAT_TERMINAL_CWD")) else None,
         memory_repo_roots=tuple(
             Path(root).expanduser()
             for root in (lookup("MEMORY_REPO_ROOTS") or DEFAULT_MEMORY_REPO_ROOTS).split(":")

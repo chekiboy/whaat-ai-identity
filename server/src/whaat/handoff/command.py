@@ -4,8 +4,8 @@ first message, in the shell this machine has (PowerShell on Windows, a POSIX she
 import shlex
 from pathlib import Path
 
+from whaat.agent import Launch
 from whaat.platform.system import windows
-from whaat.terminal.agent import Launch
 
 
 def _ps(text: str) -> str:

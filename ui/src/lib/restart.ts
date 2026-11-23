@@ -33,8 +33,7 @@ const WAIT_MS = 30000;
 const STEP_MS = 500;
 
 /** Restart the server and reload once a new process answers (its `started` changes). The server builds the checkout's
-    UI first and refuses when the build fails, with the end of its output. Terminal sessions live in tmux and keep
-    running through it. */
+    UI first and refuses when the build fails, with the end of its output. */
 export function useRestart(): { state: RestartState; error: string | null; restart: () => Promise<void> } {
   const [state, setState] = useState<RestartState>("idle");
   const [error, setError] = useState<string | null>(null);

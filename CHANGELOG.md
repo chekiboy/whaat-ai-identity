@@ -4,6 +4,13 @@ What changed in each version of whaat. The format follows [Keep a Changelog](htt
 
 ## Unreleased
 
+### Removed
+
+- **The experimental terminal**, with everything that existed only for it: the Terminal page and its menu item, tmux sessions, opening a session in Terminal or iTerm2, the machine's terminal themes, the saved project folders, and the terminal part of Settings (start command, where sessions open, colour theme). The server no longer needs tmux, and the UI no longer ships xterm. Curation and migration start from a line you paste into a terminal of your own (below).
+- **API.** The `/api/v1/terminal/*` routes, and the `terminal` part of the preferences; an older preferences file loses it on its next save.
+- **Configuration.** `WHAAT_TERMINAL_COMMAND` and `WHAAT_TERMINAL_CWD`.
+- **Left behind by an earlier version.** Its terminal sessions keep running on their own tmux server until you stop them with `tmux -L whaat-<instance> kill-server` (`whaat-live` for the default instance), and `<state dir>/terminal/` can be deleted.
+
 ### Changed
 
 - **Curation and migration no longer run in the app's terminal.** **Start curation** and the migration's start button show a line to paste into a terminal of your own; it starts the agent as the identity, in PowerShell syntax on Windows. The session then waits for the page of its own report or plan in the background (`whaat wait curation --report <id>`, `whaat wait migration --plan <id>`), and each click on that page reaches it through whaat instead of being typed into a tmux session. A call waits on disk until the session takes it, so a server restart in between loses nothing; one no session took within 10 minutes is dropped, never run later. When no session waits for that report or plan, the page shows the call to paste, as before.

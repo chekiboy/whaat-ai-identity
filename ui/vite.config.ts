@@ -35,7 +35,7 @@ export default defineConfig(({ command }) => ({
   base: command === "build" ? "/ui/" : "/",
   plugins: [tanstackRouter({ target: "react", autoCodeSplitting: true }), react(), tailwindcss(), devToken()],
   resolve: { alias: { "@": resolve(import.meta.dirname, "src") } },
-  server: { port: 5173, strictPort: true, proxy: { "/api": { target: SERVER, ws: true } } },
+  server: { port: 5173, strictPort: true, proxy: { "/api": { target: SERVER } } },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test-setup.ts"],

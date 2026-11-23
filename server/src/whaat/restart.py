@@ -1,7 +1,6 @@
 """Restarting and stopping the server from its own UI. A restart replaces the process with a fresh `whaat serve`, so it
 loads the code on disk and keeps its environment, port and parent (a terminal, the launcher or the app). A stop sends
-the process SIGTERM, so uvicorn shuts down as it does on Ctrl-C. tmux sessions live in their own server and keep
-running through both."""
+the process SIGTERM, so uvicorn shuts down as it does on Ctrl-C."""
 
 import os
 import signal

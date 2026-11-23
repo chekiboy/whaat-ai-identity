@@ -14,6 +14,7 @@ from typing import Annotated, Any, Literal
 import typer
 import uvicorn
 
+from whaat import agent
 from whaat.config import Settings, load_settings
 from whaat.git import GitCommitter
 from whaat.handoff.store import WAIT_SECONDS
@@ -26,7 +27,6 @@ from whaat.platform.process import spawn_detached
 from whaat.platform.repo_key import repo_key
 from whaat.reports.store import report_key
 from whaat.security import load_or_create_token
-from whaat.terminal import agent
 
 SERVER_LOG_NAME = "server.log"
 ENSURE_TIMEOUT_SECONDS = 15.0

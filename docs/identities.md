@@ -38,4 +38,4 @@ Separately, Whaat itself can run as several **instances**, each with its own por
 | `whaat connect <name> [--global]` | Connects Claude Code in this folder (or everywhere) as `<name>` |
 | `whaat identity add <name>` | Creates an identity and prints its token once; needs the admin token |
 
-In the app: **Settings › Identities** lists the identities, creates new ones, gives one a new token (the old one stops working at once) and sets which one the app opens with. An identity can also get its own Claude Code config folder there, which the [terminal](terminal.md) uses.
+In the app: **Settings › Identities** lists the identities, creates new ones, gives one a new token (the old one stops working at once) and sets which one the app opens with. An identity can also get its own Claude Code config folder there, which the start lines of [curation](curation.md) and [migration](migration.md) use.

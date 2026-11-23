@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 
+from whaat.agent import AgentTokenMissingError
 from whaat.distilled.schemas import DistilledAnalysis
 from whaat.distilled.store import load_analysis, load_graph
 from whaat.git import GitCommitError
@@ -70,7 +71,6 @@ from whaat.memory.schemas import (
 )
 from whaat.memory.service import MEMORY_DIR, MemoryService
 from whaat.security import PrincipalDep, require_identity
-from whaat.terminal.agent import AgentTokenMissingError
 
 router = APIRouter(prefix="/api/v1/memory", tags=["memory"])
 

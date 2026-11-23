@@ -1,4 +1,6 @@
 import json
+import shlex
+import stat
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -8,11 +10,11 @@ from typer.testing import CliRunner
 
 import whaat.cli.main as cli
 from tests.conftest import CLAUDE_TOKEN, TOKEN, write
+from whaat.agent import CONNECTOR, Launch
 from whaat.config import Settings
 from whaat.handoff.command import start_line
 from whaat.handoff.store import CALL_SECONDS, WAIT_SECONDS, HandoffStore
 from whaat.main import create_app
-from whaat.terminal.agent import Launch
 
 ADMIN = {"Authorization": f"Bearer {TOKEN}"}
 CLAUDE = {"Authorization": f"Bearer {CLAUDE_TOKEN}"}
@@ -32,11 +34,7 @@ def the_memory_the_rows_name(settings: Settings) -> None:
 
 @pytest.fixture
 def app(settings: Settings) -> TestClient:
-    client = TestClient(create_app(settings, TOKEN))
-    # curation reaches its session through the hand-off only: any use of the terminal here fails the test
-    client.app.state.tmux = None  # type: ignore[attr-defined]
-    client.app.state.terminals = None  # type: ignore[attr-defined]
-    return client
+    return TestClient(create_app(settings, TOKEN))
 
 
 def saved_report(client: TestClient, report: Mapping[str, object] = REPORT) -> str:
@@ -246,3 +244,39 @@ def test_a_rejected_row_of_a_report_saved_before_the_actions_list_is_still_disca
     discarded = app.get("/api/v1/curation/discarded", headers=CLAUDE).json()
 
     assert [(d["file"], d["actions"]) for d in discarded] == [("feedback_x.md", ["verify"])]
+
+
+def test_the_real_start_line_runs_claude_with_the_plugin_and_keeps_the_token_in_the_config(
+    app: TestClient, tmp_path: Path
+) -> None:
+    token = app.post("/api/v1/identities", json={"id": "agent"}, headers=ADMIN).json()["token"]
+    config = tmp_path / "agent config"
+    config.mkdir()
+    (config / "settings.json").write_text(json.dumps({"model": "opus", "env": {"OTHER": "1"}}), encoding="utf-8")
+    app.patch("/api/v1/preferences", json={"identity": {"agents": {"agent": str(config)}}}, headers=ADMIN)
+
+    started = app.post("/api/v1/curation/start", json={"identity": "agent"}, headers=ADMIN).json()
+
+    settings_file = config / "settings.json"
+    written = json.loads(settings_file.read_text(encoding="utf-8"))
+    assert started["command"] == (
+        f"CLAUDE_CONFIG_DIR={shlex.quote(str(config))} claude --plugin-dir {shlex.quote(str(CONNECTOR))}"
+        " '/whaat:memory-curation report'"
+    )
+    assert token not in started["command"]
+    assert (CONNECTOR / ".claude-plugin" / "plugin.json").is_file()
+    assert (written["model"], written["env"]["OTHER"], written["env"]["WHAAT_TOKEN"]) == ("opus", "1", token)
+    assert stat.S_IMODE(settings_file.stat().st_mode) == 0o600
+
+
+def test_an_agent_config_without_a_kept_token_refuses_the_start_and_writes_nothing(
+    app: TestClient, tmp_path: Path
+) -> None:
+    config = tmp_path / "agent-config"
+    config.mkdir()
+    app.patch("/api/v1/preferences", json={"identity": {"agents": {"claude": str(config)}}}, headers=ADMIN)
+
+    refused = app.post("/api/v1/curation/start", json={"identity": "claude"}, headers=ADMIN)
+
+    assert refused.status_code == 409 and "new token" in refused.json()["detail"]
+    assert not (config / "settings.json").exists()

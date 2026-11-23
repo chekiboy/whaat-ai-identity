@@ -7,13 +7,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from whaat.cli import main as cli
-from whaat.cli.main import _connect_token, claude_settings_file
-from whaat.config import Settings
-from whaat.git import GitCommitter
-from whaat.identities.registry import IdentityRegistry
-from whaat.security import load_or_create_token
-from whaat.terminal.agent import (
+from whaat.agent import (
     CONNECTOR,
     RECALL_RULE,
     ClaudeMdUnusableError,
@@ -23,6 +17,12 @@ from whaat.terminal.agent import (
     launch_for,
     with_connector,
 )
+from whaat.cli import main as cli
+from whaat.cli.main import _connect_token, claude_settings_file
+from whaat.config import Settings
+from whaat.git import GitCommitter
+from whaat.identities.registry import IdentityRegistry
+from whaat.security import load_or_create_token
 
 
 def test_the_connector_joins_the_other_plugin_folders_once_and_last() -> None:
@@ -168,12 +168,12 @@ def test_a_claude_md_linked_into_a_folder_that_cannot_be_written_is_refused(tmp_
         locked.chmod(0o755)
 
 
-def test_a_terminal_start_skips_a_claude_md_it_cannot_write(tmp_path: Path, settings: Settings) -> None:
+def test_a_session_start_skips_a_claude_md_it_cannot_write(tmp_path: Path, settings: Settings) -> None:
     config = tmp_path / "config"
     config.mkdir()
     (config / "CLAUDE.md").write_bytes(b"\xff not utf-8")
 
-    launch = launch_for("agent", str(config), "claude", settings, lambda identity: "the-token")
+    launch = launch_for("agent", str(config), settings, lambda identity: "the-token")
 
     assert launch is not None
     assert (config / "CLAUDE.md").read_bytes() == b"\xff not utf-8"

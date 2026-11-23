@@ -1,17 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  Brain,
-  FileText,
-  House,
-  Info,
-  type LucideIcon,
-  PanelLeft,
-  Scale,
-  Search,
-  Settings,
-  SquareTerminal,
-} from "lucide-react";
+import { Brain, FileText, House, Info, type LucideIcon, PanelLeft, Scale, Search, Settings } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { browseMemoriesOptions, getHealthOptions } from "@/client/@tanstack/react-query.gen";
 import { CreateIdentity } from "@/components/identities/create-identity";
@@ -27,8 +16,8 @@ import { ModuleBarProvider, ModuleBarSlot } from "./module-bar";
 import "@/styles/shell.css";
 
 type Module = {
-  to: "/" | "/memory" | "/reports" | "/terminal" | "/about" | "/settings";
-  label: "home" | "memory" | "reports" | "terminal" | "about" | "settings";
+  to: "/" | "/memory" | "/reports" | "/about" | "/settings";
+  label: "home" | "memory" | "reports" | "about" | "settings";
   page: string;
   icon: LucideIcon;
   key: string;
@@ -39,7 +28,6 @@ const MODULES: Module[] = [
   HOME,
   { to: "/memory", label: "memory", page: "Memory", icon: Brain, key: "m" },
   { to: "/reports", label: "reports", page: "Reports", icon: FileText, key: "r" },
-  { to: "/terminal", label: "terminal", page: "Terminal", icon: SquareTerminal, key: "t" },
 ];
 const ABOUT: Module = { to: "/about", label: "about", page: "About", icon: Info, key: "i" };
 const SETTINGS: Module = { to: "/settings", label: "settings", page: "Settings", icon: Settings, key: "s" };
@@ -128,7 +116,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <m.icon />
               <span className="sh-tip">
                 {t(`shell.${m.label}`)}
-                {m.to === "/terminal" && <i className="sh-exp-tip"> · {t("terminal.experimental")}</i>}{" "}
                 <kbd>G {m.key.toUpperCase()}</kbd>
               </span>
             </Link>

@@ -78,5 +78,5 @@ def restart_server(request: Request, _: Annotated[Principal, Depends(require_adm
 @router.post("/stop", status_code=status.HTTP_202_ACCEPTED)
 def stop_server(request: Request, _: Annotated[Principal, Depends(require_admin)]) -> None:
     """Stop the server a moment after this answer, as Ctrl-C would; it starts again only from outside (the app or
-    `whaat serve`). Terminal sessions keep running in tmux."""
+    `whaat serve`)."""
     request.app.state.stop()
