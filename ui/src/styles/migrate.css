@@ -365,13 +365,20 @@
   color: var(--cream2);
   user-select: text;
 }
-.mg-cmd code {
-  display: block;
-  margin-top: 4px;
+.mg-cmd pre {
+  margin: 4px 0;
   padding: 6px 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   background: var(--bg);
   border: 1px solid var(--edge2);
   color: var(--phos);
+}
+.mg-cmd button {
+  font: 12px var(--mono);
+  color: var(--cream2);
+  border: 1px solid var(--edge2);
+  padding: 2px 10px;
 }
 .mg-empty {
   padding: 40px 24px;

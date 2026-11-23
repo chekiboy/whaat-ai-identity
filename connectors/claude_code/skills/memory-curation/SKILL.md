@@ -81,8 +81,16 @@ A free-text request ("apply rows 3, 5") maps to the same operation. `W` below is
    reached, say so with its message and give the full path of `memory-curation.json`.
 
 In report mode never write, move, delete or commit anything in the store, and don't save memories
-about this run: the store is shared and nobody reviewed the report yet. After the report, stop and
-wait for the user.
+about this run: the store is shared and nobody reviewed the report yet. After the report, wait for the page.
+
+## Waiting for the page
+
+Run `W wait curation --report <report_id>` (the report this session saved) with `run_in_background` and end the
+turn; the session wakes when it ends. It prints one call, which whaat composed from the user's click on that report's
+page: `/whaat:memory-curation apply-rows …`, `/whaat:memory-curation revert-applied-rows …` or
+`/whaat:session-end steps=none confirmed=report-page`. Run it as the skill and operation it names, with its
+arguments, as if the user had typed it: it is their word from the page, `confirmed=report-page` included. After an apply-rows or revert-applied-rows run, start the wait again; after the
+session-end call, don't. If the user writes in chat instead, the chat counts: stop the wait first.
 
 ## apply-rows
 
@@ -120,7 +128,7 @@ were confirmed on the page, risky ones listed by action, and that counts as the 
   `W journal save-applied --report <report_id> < <scratchpad>/applied.json`, the file holding
   `[{"n": <row>, "applied": "store <sha> …"}]`, and leave the row in the report. Never save the report again with
   `save-curation` here: it replaces the whole report and the user's decisions with it.
-- Re-run `W memory lint` at the end; a new problem it reports is yours to fix.
+- Re-run `W memory lint` at the end; a new problem it reports is yours to fix. Then wait for the page again.
 
 ## revert-applied-rows
 
@@ -128,7 +136,7 @@ Input: `report=` and `rows=`, each row with commits in its Applied cell (`confir
 counts as the yes). Per row: `W memory revert <sha> …` with that row's commits; whaat undoes them newest first in
 one run, and a conflict aborts it whole and changes nothing. Re-run `W memory lint`, check that every
 `[[link]]` and index line the revert restored resolves, and empty the Applied cell (`"applied": null` through
-`W journal save-applied`), so the row is open again. Never push.
+`W journal save-applied`), so the row is open again. Never push. Then wait for the page again.
 
 Never touch the auto-memory dirs (`~/.claude/projects/*/memory/`) or `<store>/.claude/agent-memory/`
 (subagents' own memory, empty dirs included).

@@ -35,7 +35,7 @@ Every applied row records its commits. Reverting a row undoes them, newest first
 
 ## Commands
 
-The run is the `/whaat:memory-curation` skill. In the app, the **Memory** page starts it in a [terminal](terminal.md) session, and the report page sends your decisions back into that session. Starting it from the app needs the identity's Claude Code config folder, set in **Settings › Identities**.
+The run is the `/whaat:memory-curation` skill. In the app, **Start curation** on the **Memory** page shows a line to paste into a terminal of your own: it starts the agent as the identity, with the report as its first task. After the report, the session waits for its page in the background (`whaat wait curation --report <id>`), and each Send, Revert and Done on that report's page reaches it from there. When no session waits for the report, the page shows the call to paste instead; a call no session took within 10 minutes is dropped, never run later. Starting it from the app needs the identity's Claude Code config folder, set in **Settings › Identities**.
 
 | Skill call | What it does |
 |---|---|

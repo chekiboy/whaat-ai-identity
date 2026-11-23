@@ -39,7 +39,7 @@ A memory that landed in the wrong layer can be moved afterwards. A loose folder'
 
 ## Commands
 
-The run is the `/whaat:memory-migrate` skill. In the app, open the identity from **Settings › Identities** and start the migration there; it runs in a [terminal](terminal.md) session, and the page sends your choice back into it. Starting it from the app needs the identity's Claude Code config folder, set on the same page.
+The run is the `/whaat:memory-migrate` skill. In the app, open the identity from **Settings › Identities** and start the migration there: the page shows a line to paste into a terminal of your own; it starts in the identity's Claude Code config folder, and you can change the folder in the line before you paste it. Once the plan is made, the session waits for the page in the background (`whaat wait migration --plan <id>`), and your choice reaches it when you send. When no session waits for the plan, the page shows the call to paste instead. Starting it from the app needs the identity's Claude Code config folder, set on the same page.
 
 | Command | What it does |
 |---|---|

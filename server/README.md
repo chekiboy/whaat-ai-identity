@@ -47,7 +47,7 @@ Each setting is read from the environment, else from the `env` block of the Clau
 | `WHAAT_PORT` | The port | `1111` for `live`, `1112` otherwise |
 | `WHAAT_HOST` | The address the server binds and the CLI calls | `127.0.0.1` |
 | `WHAAT_HOSTNAME` | The host name in the URLs a browser opens | `whaat.localhost`, `<instance>.whaat.localhost` |
-| `WHAAT_STATE_DIR` | The state folder: admin token, identity tokens, preferences, terminal sessions, server log | `~/Library/Application Support/whaat[-<instance>]` |
+| `WHAAT_STATE_DIR` | The state folder: admin token, identity tokens, preferences, terminal sessions, calls the curation and migration pages hand to a waiting session, server log | `~/Library/Application Support/whaat[-<instance>]` |
 | `WHAAT_DEFAULT_IDENTITY` | The identity a new install works with | `wHaat` |
 | `WHAAT_IDENTITIES` | A JSON object of identity name → its folder | none |
 | `WHAAT_TOKEN` | The calling identity's token, for the CLI and the plugin | none |

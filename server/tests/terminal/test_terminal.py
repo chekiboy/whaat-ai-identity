@@ -13,7 +13,7 @@ from starlette.websockets import WebSocketDisconnect
 from tests.conftest import CLAUDE_TOKEN, TOKEN
 from whaat.config import Settings
 from whaat.main import create_app
-from whaat.terminal.tmux import Session
+from whaat.terminal.tmux import PROMPT_MARK, Session, prompt_line, same_text
 
 pytestmark = pytest.mark.skipif(shutil.which("tmux") is None, reason="tmux is not installed")
 ADMIN = {"Authorization": f"Bearer {TOKEN}"}
@@ -363,25 +363,6 @@ def test_an_agent_config_without_a_kept_token_refuses_the_session(terminal: Test
     assert not (config / "settings.json").exists()
 
 
-def test_the_migration_starts_in_the_agent_config_unless_a_folder_is_given(
-    terminal: TestClient, tmp_path: Path
-) -> None:
-    terminal.post("/api/v1/identities", json={"id": "agent"}, headers=ADMIN)
-    config, project = tmp_path / "agent-config", tmp_path / "project"
-    config.mkdir()
-    project.mkdir()
-    terminal.patch("/api/v1/preferences", json={"identity": {"agents": {"agent": str(config)}}}, headers=ADMIN)
-
-    started = terminal.post("/api/v1/memory/migration/start", json={"identity": "agent"}, headers=ADMIN).json()
-    terminal.delete(f"/api/v1/terminal/sessions/{started['name']}", headers=ADMIN)
-    chosen = terminal.post(
-        "/api/v1/memory/migration/start", json={"identity": "agent", "cwd": str(project)}, headers=ADMIN
-    ).json()
-
-    assert started["cwd"] == str(config.resolve())
-    assert chosen["cwd"] == str(project.resolve())
-
-
 MARK = "❯"  # noqa: RUF001 - Claude Code's prompt mark
 
 TRUST = f""" Accessing workspace:
@@ -462,3 +443,10 @@ def test_a_skill_says_it_is_done_with_its_last_turn_mark(screen: str, done: bool
     from whaat.terminal.tmux import says_done
 
     assert says_done(screen) is done
+
+
+def test_the_prompt_is_read_back_and_a_dim_suggestion_counts_as_empty() -> None:
+    assert prompt_line(f"x\n{PROMPT_MARK} hello world\n") == ("hello world", False)
+    assert prompt_line(f"{PROMPT_MARK} \x1b[2mTry this\x1b[0m\n") == ("Try this", True)
+    assert prompt_line("no prompt here") == (None, False)
+    assert same_text("a b", "ab") and not same_text(None, "a")

@@ -1,35 +1,15 @@
-import dataclasses
 import json
-import shutil
-import subprocess
-import time
-import uuid
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
-import whaat.curation.router as curation_router
 from tests.conftest import CLAUDE_TOKEN, TOKEN, write
 from whaat.config import Settings
 from whaat.main import create_app
-from whaat.terminal.agent import Launch
 
 ADMIN = {"Authorization": f"Bearer {TOKEN}"}
 CLAUDE = {"Authorization": f"Bearer {CLAUDE_TOKEN}"}
-# a stand-in for claude: shows a prompt, logs what it reads, answers the session-end call with the closing line and
-# leaves on /exit
-FAKE_CLAUDE = """import os, sys
-seen = open(os.environ["SEEN"], "a", buffering=1)
-while True:
-    sys.stdout.write("\\u276f "); sys.stdout.flush()
-    line = sys.stdin.readline()
-    if not line or line.strip() == "/exit":
-        break
-    seen.write(f"got: {line}")
-    if line.startswith("/whaat:session-end"):
-        sys.stdout.write("SESSION-END: nothing open\\n"); sys.stdout.flush()
-"""
 
 
 def memory(folder: Path, rel: str, body: str) -> None:
@@ -38,12 +18,8 @@ def memory(folder: Path, rel: str, body: str) -> None:
 
 
 @pytest.fixture
-def app(settings: Settings, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(curation_router, "WATCH_SECONDS", 0.1)
-    instance = f"t{uuid.uuid4().hex[:10]}"
-    client = TestClient(create_app(dataclasses.replace(settings, instance=instance, terminal_cwd=tmp_path), TOKEN))
-    yield client
-    subprocess.run(["tmux", "-L", f"whaat-{instance}", "kill-server"], capture_output=True, check=False)
+def app(settings: Settings) -> TestClient:
+    return TestClient(create_app(settings, TOKEN))
 
 
 def report(client: TestClient, rows: list[dict[str, object]]) -> str:
@@ -66,24 +42,10 @@ def row(n: int, file: str, action: str, target: str | None = None, applied: str 
     }
 
 
-def running_fake(client: TestClient, tmp_path: Path) -> Path:
-    script = write(tmp_path / "fake-claude", FAKE_CLAUDE)
-    seen = tmp_path / "seen.txt"
-    client.app.state.terminals.launch = lambda persona: Launch(  # type: ignore[attr-defined]
-        command=f"SEEN={seen} python3 {script}", env={}
-    )
-    assert client.post("/api/v1/curation/start", json={"identity": "claude"}, headers=ADMIN).json()["started"]
-    time.sleep(0.5)
-    return seen
-
-
-def wait_for(path: Path, needle: str) -> str:
-    for _ in range(100):
-        text = path.read_text() if path.exists() else ""
-        if needle in text:
-            return text
-        time.sleep(0.05)
-    return path.read_text() if path.exists() else ""
+def waiting_session(client: TestClient, report_id: str) -> None:
+    """The curation session's `whaat wait curation --report` asks once, so the page hands its clicks over."""
+    body = {"kind": "curation", "work": report_id}
+    assert client.post("/api/v1/handoff/next", json=body, headers=CLAUDE).json()["call"] is None
 
 
 def test_the_view_counts_the_map_as_the_live_page_and_draws_each_row(app: TestClient, settings: Settings) -> None:
@@ -115,16 +77,13 @@ def test_the_view_counts_the_map_as_the_live_page_and_draws_each_row(app: TestCl
     assert not any("personal" in c["file"] for d in view["map"]["dirs"] for c in d["cells"])
 
 
-@pytest.mark.skipif(shutil.which("tmux") is None, reason="tmux is not installed")
-def test_a_sent_row_is_stamped_refused_again_and_open_again_after_a_revert(
-    app: TestClient, settings: Settings, tmp_path: Path
-) -> None:
+def test_a_sent_row_is_stamped_refused_again_and_open_again_after_a_revert(app: TestClient, settings: Settings) -> None:
     memory(settings.identities["claude"], "feedback_a.md", "a")
     memory(settings.identities["claude"], "feedback_b.md", "b")
     report_id = report(
         app, [row(1, "feedback_a.md", "verify"), row(2, "feedback_b.md", "fix", "the fix", applied="store abc")]
     )
-    seen = running_fake(app, tmp_path)
+    waiting_session(app, report_id)
     send = {"report_id": report_id, "rows": [{"n": 1, "decision": "apply"}]}
 
     first = app.post("/api/v1/curation/decisions", json=send, headers=ADMIN).json()
@@ -133,29 +92,9 @@ def test_a_sent_row_is_stamped_refused_again_and_open_again_after_a_revert(
     reverted = app.post("/api/v1/curation/revert", json={"report_id": report_id, "n": 2}, headers=ADMIN).json()
 
     stored = json.loads(next((settings.identities["claude"] / "memory-curation").rglob("*.json")).read_text())
-    assert first["typed"] and first["at"]
+    assert first["handed"] and first["at"]
     assert stored["body"]["rows"][0]["sent_at"] == first["at"]
     assert (again.status_code, again.json()["detail"]) == (409, "already sent: rows 1")
     assert (refused.status_code, refused.json()["detail"]) == (400, "rows must be applied rows of this report")
-    assert reverted["typed"]
-    assert f"report={report_id} rows=2 confirmed=report-page" in wait_for(seen, "revert-applied-rows")
-
-
-@pytest.mark.skipif(shutil.which("tmux") is None, reason="tmux is not installed")
-def test_done_ends_the_session_and_types_exit_once_it_printed_its_closing_line(app: TestClient, tmp_path: Path) -> None:
-    seen = running_fake(app, tmp_path)
-    assert app.get("/api/v1/curation/run-state", params={"identity": "claude"}, headers=ADMIN).json()["state"] == "open"
-
-    done = app.post("/api/v1/curation/done", json={"identity": "claude"}, headers=ADMIN).json()
-
-    states = []
-    for _ in range(100):
-        states.append(
-            app.get("/api/v1/curation/run-state", params={"identity": "claude"}, headers=ADMIN).json()["state"]
-        )
-        if states[-1] == "exited":
-            break
-        time.sleep(0.1)
-    assert done["typed"] and done["command"] == "/whaat:session-end steps=none confirmed=report-page"
-    assert "got: /whaat:session-end" in wait_for(seen, "session-end")
-    assert states[-1] == "exited"
+    assert reverted["handed"]
+    assert reverted["command"].endswith(f"report={report_id} rows=2 confirmed=report-page")

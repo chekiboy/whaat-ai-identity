@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import CLAUDE_TOKEN, TOKEN, write
 from whaat.config import Settings
+from whaat.terminal.agent import Launch
 
 ADMIN = {"Authorization": f"Bearer {TOKEN}"}
 CLAUDE = {"Authorization": f"Bearer {CLAUDE_TOKEN}"}
@@ -332,7 +333,7 @@ def test_a_plan_is_chosen_on_the_page_and_imported_as_chosen(
     assert hidden.status_code == 404
     assert early.status_code == 409
     assert wrong_target.status_code == 422
-    assert (sent["typed"], sent["command"]) == (False, f"/whaat:memory-migrate import plan={plan_id}")
+    assert (sent["handed"], sent["command"]) == (False, f"/whaat:memory-migrate import plan={plan_id}")
     assert [g["id"] for g in imported["groups"]] == ["1:.", "2:acme/shop"]
     root = trial_root(settings) / "memory"
     personal_files = [p for p in (root / "personal").glob("*.md") if p.name != "MEMORY.md"]
@@ -457,3 +458,49 @@ def test_a_memory_edited_here_since_its_import_is_edited_not_a_conflict(
     assert by_id["1:acme"]["conflicts"] == ["acme/feedback_h.md"] and by_id["1:acme"]["edited"] == []
     assert again["groups"][0]["edited"] == ["feedback_a.md"] and again["groups"][0]["conflicts"] == []
     assert (root / "feedback_a.md").read_text() == memory("feedback_a", "Do it. See [[feedback_b]].")
+
+
+def test_the_import_call_is_handed_to_the_migration_session_waiting_for_the_page(
+    client: TestClient, trial: dict[str, str], store: Path
+) -> None:
+    plan_id = client.post(
+        "/api/v1/memory/migration/plans", json={"sources": [{"path": str(store), "kind": "store"}]}, headers=trial
+    ).json()["plan"]["id"]
+    ask = {"kind": "migration", "work": plan_id}
+    asked = client.post("/api/v1/handoff/next", json=ask, headers=trial).json()
+
+    sent = client.post(
+        f"/api/v1/memory/migration/plans/{plan_id}/decisions",
+        json={"identity": "trial", "groups": ["1:."]},
+        headers=ADMIN,
+    ).json()
+    taken = client.post("/api/v1/handoff/next", json=ask, headers=trial).json()
+    curation = client.post("/api/v1/handoff/next", json={**ask, "kind": "curation"}, headers=trial).json()
+
+    call = f"/whaat:memory-migrate import plan={plan_id}"
+    assert (asked["call"], sent["handed"], sent["command"]) == (None, True, call)
+    assert (taken["call"], curation["call"]) == (call, None)
+
+
+def test_the_migration_line_starts_in_the_agent_config_unless_a_folder_is_given(
+    client: TestClient, trial: dict[str, str], tmp_path: Path
+) -> None:
+    config, project = tmp_path / "agent-config", tmp_path / "project"
+    config.mkdir()
+    client.patch("/api/v1/preferences", json={"identity": {"agents": {"trial": str(config)}}}, headers=ADMIN)
+    client.app.state.launch = lambda persona: Launch(  # type: ignore[attr-defined]
+        command="claude --plugin-dir /c/claude_code", env={"CLAUDE_CONFIG_DIR": str(config)}
+    )
+    client.app.state.tmux = None  # type: ignore[attr-defined]
+
+    started = client.post("/api/v1/memory/migration/start", json={"identity": "trial"}, headers=ADMIN).json()
+    chosen = client.post(
+        "/api/v1/memory/migration/start", json={"identity": "trial", "cwd": str(project)}, headers=ADMIN
+    ).json()
+
+    assert started == {
+        "command": f"cd {config} && CLAUDE_CONFIG_DIR={config} claude --plugin-dir /c/claude_code"
+        " /whaat:memory-migrate",
+        "waiting": False,
+    }
+    assert chosen["command"].startswith(f"cd {project} && ")

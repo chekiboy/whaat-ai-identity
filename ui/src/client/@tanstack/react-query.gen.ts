@@ -3,15 +3,15 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { answerDecisions, browseFolders, browseMemories, closeTerminal, collectDecisions, createIdentity, curationPage, deleteMemory, discardedProposals, forgetProject, getHealth, getPreferences, getReport, getReportByKey, listIdentities, listProjects, listReports, listTerminalApps, listTerminals, listThemes, memoryAnalysis, memoryBrain, memoryCurationBrief, memoryCurationRefuteBrief, memoryFidelity, memoryGraph, memoryLint, memoryRings, memoryWhere, migrationGroups, migrationImport, migrationMovePersonal, migrationPlanCreate, migrationPlanDecide, migrationPlanGet, migrationPlanImport, migrationPlanList, migrationStart, openNatively, openReport, openTerminal, type Options, outcomeRead, outcomeReads, outcomeRecord, recallDump, recallFrame, recallGuard, recallIndex, recallOpen, recallSeen, recallStart, recallSubagentCore, regenerateToken, renameTerminal, restartServer, revertMemory, runState, saveCurationApplied, saveCurationReport, saveDecisions, saveJournalEntry, saveMemory, saveSessionReport, sendDecisions, sendDone, sendRevert, startCuration, stopServer, updatePreferences, validityLevel, validityRefresh } from '../sdk.gen';
-import type { AnswerDecisionsData, AnswerDecisionsError, AnswerDecisionsResponse, BrowseFoldersData, BrowseFoldersError, BrowseFoldersResponse, BrowseMemoriesData, BrowseMemoriesResponse, CloseTerminalData, CloseTerminalError, CloseTerminalResponse, CollectDecisionsData, CollectDecisionsError, CollectDecisionsResponse, CreateIdentityData, CreateIdentityError, CreateIdentityResponse, CurationPageData, CurationPageError, CurationPageResponse, DeleteMemoryData, DeleteMemoryError, DeleteMemoryResponse, DiscardedProposalsData, DiscardedProposalsResponse, ForgetProjectData, ForgetProjectError, ForgetProjectResponse, GetHealthData, GetHealthResponse, GetPreferencesData, GetPreferencesResponse, GetReportByKeyData, GetReportByKeyError, GetReportByKeyResponse, GetReportData, GetReportError, GetReportResponse, ListIdentitiesData, ListIdentitiesResponse, ListProjectsData, ListProjectsResponse, ListReportsData, ListReportsError, ListReportsResponse, ListTerminalAppsData, ListTerminalAppsResponse, ListTerminalsData, ListTerminalsError, ListTerminalsResponse, ListThemesData, ListThemesResponse, MemoryAnalysisData, MemoryAnalysisError, MemoryAnalysisResponse, MemoryBrainData, MemoryBrainError, MemoryBrainResponse, MemoryCurationBriefData, MemoryCurationBriefError, MemoryCurationBriefResponse, MemoryCurationRefuteBriefData, MemoryCurationRefuteBriefError, MemoryCurationRefuteBriefResponse, MemoryFidelityData, MemoryFidelityError, MemoryFidelityResponse, MemoryGraphData, MemoryGraphError, MemoryGraphResponse, MemoryLintData, MemoryLintError, MemoryLintResponse, MemoryRingsData, MemoryRingsError, MemoryRingsResponse, MemoryWhereData, MemoryWhereError, MemoryWhereResponse, MigrationGroupsData, MigrationGroupsError, MigrationGroupsResponse, MigrationImportData, MigrationImportError, MigrationImportResponse, MigrationMovePersonalData, MigrationMovePersonalResponse, MigrationPlanCreateData, MigrationPlanCreateError, MigrationPlanCreateResponse, MigrationPlanDecideData, MigrationPlanDecideError, MigrationPlanDecideResponse, MigrationPlanGetData, MigrationPlanGetError, MigrationPlanGetResponse, MigrationPlanImportData, MigrationPlanImportError, MigrationPlanImportResponse, MigrationPlanListData, MigrationPlanListError, MigrationPlanListResponse, MigrationStartData, MigrationStartError, MigrationStartResponse, OpenNativelyData, OpenNativelyError, OpenNativelyResponse, OpenReportData, OpenReportError, OpenReportResponse, OpenTerminalData, OpenTerminalError, OpenTerminalResponse, OutcomeReadData, OutcomeReadError, OutcomeReadResponse, OutcomeReadsData, OutcomeReadsError, OutcomeReadsResponse, OutcomeRecordData, OutcomeRecordError, OutcomeRecordResponse, RecallDumpData, RecallDumpError, RecallDumpResponse, RecallFrameData, RecallFrameError, RecallFrameResponse, RecallGuardData, RecallGuardError, RecallGuardResponse, RecallIndexData, RecallIndexError, RecallIndexResponse, RecallOpenData, RecallOpenError, RecallOpenResponse, RecallSeenData, RecallSeenError, RecallSeenResponse, RecallStartData, RecallStartError, RecallStartResponse, RecallSubagentCoreData, RecallSubagentCoreResponse, RegenerateTokenData, RegenerateTokenError, RegenerateTokenResponse, RenameTerminalData, RenameTerminalError, RenameTerminalResponse, RestartServerData, RestartServerResponse, RevertMemoryData, RevertMemoryError, RevertMemoryResponse, RunStateData, RunStateError, RunStateResponse, SaveCurationAppliedData, SaveCurationAppliedError, SaveCurationAppliedResponse, SaveCurationReportData, SaveCurationReportError, SaveCurationReportResponse, SaveDecisionsData, SaveDecisionsError, SaveDecisionsResponse, SaveJournalEntryData, SaveJournalEntryError, SaveJournalEntryResponse, SaveMemoryData, SaveMemoryError, SaveMemoryResponse, SaveSessionReportData, SaveSessionReportError, SaveSessionReportResponse, SendDecisionsData, SendDecisionsError, SendDecisionsResponse, SendDoneData, SendDoneError, SendDoneResponse, SendRevertData, SendRevertError, SendRevertResponse, StartCurationData, StartCurationError, StartCurationResponse, StopServerData, UpdatePreferencesData, UpdatePreferencesError, UpdatePreferencesResponse, ValidityLevelData, ValidityLevelError, ValidityLevelResponse, ValidityRefreshData, ValidityRefreshResponse } from '../types.gen';
+import { answerDecisions, browseFolders, browseMemories, closeTerminal, collectDecisions, createIdentity, curationPage, deleteMemory, discardedProposals, forgetProject, getHealth, getPreferences, getReport, getReportByKey, listIdentities, listProjects, listReports, listTerminalApps, listTerminals, listThemes, memoryAnalysis, memoryBrain, memoryCurationBrief, memoryCurationRefuteBrief, memoryFidelity, memoryGraph, memoryLint, memoryRings, memoryWhere, migrationGroups, migrationImport, migrationMovePersonal, migrationPlanCreate, migrationPlanDecide, migrationPlanGet, migrationPlanImport, migrationPlanList, migrationStart, nextCall, openNatively, openReport, openTerminal, type Options, outcomeRead, outcomeReads, outcomeRecord, recallDump, recallFrame, recallGuard, recallIndex, recallOpen, recallSeen, recallStart, recallSubagentCore, regenerateToken, renameTerminal, restartServer, revertMemory, saveCurationApplied, saveCurationReport, saveDecisions, saveJournalEntry, saveMemory, saveSessionReport, sendDecisions, sendDone, sendRevert, startCuration, stopServer, updatePreferences, validityLevel, validityRefresh } from '../sdk.gen';
+import type { AnswerDecisionsData, AnswerDecisionsError, AnswerDecisionsResponse, BrowseFoldersData, BrowseFoldersError, BrowseFoldersResponse, BrowseMemoriesData, BrowseMemoriesResponse, CloseTerminalData, CloseTerminalError, CloseTerminalResponse, CollectDecisionsData, CollectDecisionsError, CollectDecisionsResponse, CreateIdentityData, CreateIdentityError, CreateIdentityResponse, CurationPageData, CurationPageError, CurationPageResponse, DeleteMemoryData, DeleteMemoryError, DeleteMemoryResponse, DiscardedProposalsData, DiscardedProposalsResponse, ForgetProjectData, ForgetProjectError, ForgetProjectResponse, GetHealthData, GetHealthResponse, GetPreferencesData, GetPreferencesResponse, GetReportByKeyData, GetReportByKeyError, GetReportByKeyResponse, GetReportData, GetReportError, GetReportResponse, ListIdentitiesData, ListIdentitiesResponse, ListProjectsData, ListProjectsResponse, ListReportsData, ListReportsError, ListReportsResponse, ListTerminalAppsData, ListTerminalAppsResponse, ListTerminalsData, ListTerminalsError, ListTerminalsResponse, ListThemesData, ListThemesResponse, MemoryAnalysisData, MemoryAnalysisError, MemoryAnalysisResponse, MemoryBrainData, MemoryBrainError, MemoryBrainResponse, MemoryCurationBriefData, MemoryCurationBriefError, MemoryCurationBriefResponse, MemoryCurationRefuteBriefData, MemoryCurationRefuteBriefError, MemoryCurationRefuteBriefResponse, MemoryFidelityData, MemoryFidelityError, MemoryFidelityResponse, MemoryGraphData, MemoryGraphError, MemoryGraphResponse, MemoryLintData, MemoryLintError, MemoryLintResponse, MemoryRingsData, MemoryRingsError, MemoryRingsResponse, MemoryWhereData, MemoryWhereError, MemoryWhereResponse, MigrationGroupsData, MigrationGroupsError, MigrationGroupsResponse, MigrationImportData, MigrationImportError, MigrationImportResponse, MigrationMovePersonalData, MigrationMovePersonalResponse, MigrationPlanCreateData, MigrationPlanCreateError, MigrationPlanCreateResponse, MigrationPlanDecideData, MigrationPlanDecideError, MigrationPlanDecideResponse, MigrationPlanGetData, MigrationPlanGetError, MigrationPlanGetResponse, MigrationPlanImportData, MigrationPlanImportError, MigrationPlanImportResponse, MigrationPlanListData, MigrationPlanListError, MigrationPlanListResponse, MigrationStartData, MigrationStartError, MigrationStartResponse, NextCallData, NextCallError, NextCallResponse, OpenNativelyData, OpenNativelyError, OpenNativelyResponse, OpenReportData, OpenReportError, OpenReportResponse, OpenTerminalData, OpenTerminalError, OpenTerminalResponse, OutcomeReadData, OutcomeReadError, OutcomeReadResponse, OutcomeReadsData, OutcomeReadsError, OutcomeReadsResponse, OutcomeRecordData, OutcomeRecordError, OutcomeRecordResponse, RecallDumpData, RecallDumpError, RecallDumpResponse, RecallFrameData, RecallFrameError, RecallFrameResponse, RecallGuardData, RecallGuardError, RecallGuardResponse, RecallIndexData, RecallIndexError, RecallIndexResponse, RecallOpenData, RecallOpenError, RecallOpenResponse, RecallSeenData, RecallSeenError, RecallSeenResponse, RecallStartData, RecallStartError, RecallStartResponse, RecallSubagentCoreData, RecallSubagentCoreResponse, RegenerateTokenData, RegenerateTokenError, RegenerateTokenResponse, RenameTerminalData, RenameTerminalError, RenameTerminalResponse, RestartServerData, RestartServerResponse, RevertMemoryData, RevertMemoryError, RevertMemoryResponse, SaveCurationAppliedData, SaveCurationAppliedError, SaveCurationAppliedResponse, SaveCurationReportData, SaveCurationReportError, SaveCurationReportResponse, SaveDecisionsData, SaveDecisionsError, SaveDecisionsResponse, SaveJournalEntryData, SaveJournalEntryError, SaveJournalEntryResponse, SaveMemoryData, SaveMemoryError, SaveMemoryResponse, SaveSessionReportData, SaveSessionReportError, SaveSessionReportResponse, SendDecisionsData, SendDecisionsError, SendDecisionsResponse, SendDoneData, SendDoneError, SendDoneResponse, SendRevertData, SendRevertError, SendRevertResponse, StartCurationData, StartCurationError, StartCurationResponse, StopServerData, UpdatePreferencesData, UpdatePreferencesError, UpdatePreferencesResponse, ValidityLevelData, ValidityLevelError, ValidityLevelResponse, ValidityRefreshData, ValidityRefreshResponse } from '../types.gen';
 
 /**
  * Send Decisions
  *
- * Save the user's word per row into the report, then type the apply call into the identity's running curation
+ * Save the user's word per row into the report, then hand the apply call to the identity's waiting curation
  * session and stamp the applied rows as sent; a row already sent (and not reverted since) is refused. When no
- * session runs, the answer carries the call to paste.
+ * session waits, the answer carries the call to paste.
  */
 export const sendDecisionsMutation = (options?: Partial<Options<SendDecisionsData>>): UseMutationOptions<SendDecisionsResponse, SendDecisionsError, Options<SendDecisionsData>> => {
     const mutationOptions: UseMutationOptions<SendDecisionsResponse, SendDecisionsError, Options<SendDecisionsData>> = {
@@ -84,8 +84,8 @@ export const discardedProposalsOptions = (options?: Options<DiscardedProposalsDa
 /**
  * Send Done
  *
- * Done on the page: the session-end call with no steps; a watcher then waits for the closing line and types
- * /exit. Its state is read from /run-state.
+ * Done on the page: hand the session-end call with no steps to the curation session waiting for this report,
+ * which ends the curation; its terminal is the user's to close.
  */
 export const sendDoneMutation = (options?: Partial<Options<SendDoneData>>): UseMutationOptions<SendDoneResponse, SendDoneError, Options<SendDoneData>> => {
     const mutationOptions: UseMutationOptions<SendDoneResponse, SendDoneError, Options<SendDoneData>> = {
@@ -104,7 +104,7 @@ export const sendDoneMutation = (options?: Partial<Options<SendDoneData>>): UseM
 /**
  * Send Revert
  *
- * Type revert-applied-rows for one applied row into the curation session; the row counts as not sent again.
+ * Hand revert-applied-rows for one applied row to the waiting curation session; the row counts as unsent again.
  */
 export const sendRevertMutation = (options?: Partial<Options<SendRevertData>>): UseMutationOptions<SendRevertResponse, SendRevertError, Options<SendRevertData>> => {
     const mutationOptions: UseMutationOptions<SendRevertResponse, SendRevertError, Options<SendRevertData>> = {
@@ -120,31 +120,11 @@ export const sendRevertMutation = (options?: Partial<Options<SendRevertData>>): 
     return mutationOptions;
 };
 
-export const runStateQueryKey = (options: Options<RunStateData>) => createQueryKey('runState', options);
-
-/**
- * Run State
- *
- * waiting, asked, exited after Done; open when Done was not sent.
- */
-export const runStateOptions = (options: Options<RunStateData>) => queryOptions<RunStateResponse, RunStateError, RunStateResponse, ReturnType<typeof runStateQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await runState({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: runStateQueryKey(options)
-});
-
 /**
  * Start Curation
  *
- * Start memory-curation's report in a terminal session of the identity, with its own agent config; a curation
- * session already running for it is returned instead of a second one.
+ * The line that starts memory-curation's report as this identity, with its own agent config, for the user to
+ * paste into a terminal.
  */
 export const startCurationMutation = (options?: Partial<Options<StartCurationData>>): UseMutationOptions<StartCurationResponse, StartCurationError, Options<StartCurationData>> => {
     const mutationOptions: UseMutationOptions<StartCurationResponse, StartCurationError, Options<StartCurationData>> = {
@@ -180,6 +160,26 @@ export const curationPageOptions = (options: Options<CurationPageData>) => query
     },
     queryKey: curationPageQueryKey(options)
 });
+
+/**
+ * Next Call
+ *
+ * The next call for this identity's session waiting for this work, taken as it is given. An ask that gets
+ * nothing marks the session as waiting, so the page hands its next click over instead of showing the call.
+ */
+export const nextCallMutation = (options?: Partial<Options<NextCallData>>): UseMutationOptions<NextCallResponse, NextCallError, Options<NextCallData>> => {
+    const mutationOptions: UseMutationOptions<NextCallResponse, NextCallError, Options<NextCallData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await nextCall({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getHealthQueryKey = (options?: Options<GetHealthData>) => createQueryKey('getHealth', options);
 
@@ -734,8 +734,8 @@ export const migrationPlanGetOptions = (options: Options<MigrationPlanGetData>) 
 /**
  * Migration Plan Decide
  *
- * Save the user's choice from the page into the plan, then type the import call into the identity's running
- * migration session; without one, the answer carries the call to paste.
+ * Save the user's choice from the page into the plan, then hand the import call to the identity's migration
+ * session waiting through `whaat wait migration`; without one, the answer carries the call to paste.
  */
 export const migrationPlanDecideMutation = (options?: Partial<Options<MigrationPlanDecideData>>): UseMutationOptions<MigrationPlanDecideResponse, MigrationPlanDecideError, Options<MigrationPlanDecideData>> => {
     const mutationOptions: UseMutationOptions<MigrationPlanDecideResponse, MigrationPlanDecideError, Options<MigrationPlanDecideData>> = {
@@ -773,8 +773,8 @@ export const migrationPlanImportMutation = (options?: Partial<Options<MigrationP
 /**
  * Migration Start
  *
- * Start the migration skill in a terminal session of the identity, with its own agent config, in the folder
- * given or else in that agent config's folder, never the home folder; one already running is returned instead.
+ * The line that starts the migration skill as this identity, for the user to paste into a terminal: in the folder
+ * given or else in its agent config's folder, never the home folder.
  */
 export const migrationStartMutation = (options?: Partial<Options<MigrationStartData>>): UseMutationOptions<MigrationStartResponse, MigrationStartError, Options<MigrationStartData>> => {
     const mutationOptions: UseMutationOptions<MigrationStartResponse, MigrationStartError, Options<MigrationStartData>> = {

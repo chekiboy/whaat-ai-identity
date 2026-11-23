@@ -2,7 +2,7 @@
 
 **Experimental:** it may change or break, and it is not finished.
 
-The terminal runs agent sessions inside the app. You pick an identity and a project folder, and Whaat starts the agent there. It works as that identity when the identity has its own Claude Code config folder (see below); otherwise the session runs the plain start command. Curation and migration use it too: their pages start the agent in a terminal session and type your decisions into it.
+The terminal runs agent sessions inside the app. You pick an identity and a project folder, and Whaat starts the agent there. It works as that identity when the identity has its own Claude Code config folder (see below); otherwise the session runs the plain start command.
 
 ## How sessions work
 
@@ -14,12 +14,6 @@ The terminal runs agent sessions inside the app. You pick an identity and a proj
 - **Stopping a session** ends it and what runs in it. Closing its window does not.
 
 A session that tmux no longer has, for example after a restart of the Mac, is listed as gone until you remove it.
-
-## How the app follows a session
-
-The app watches the last lines of a session to know when to move you between a decision page and the terminal:
-- **Migration** ends a turn that asks you something in the terminal with `[whaat] waiting for your answer`, and the finished run with `[whaat] done`. A turn that waits for your choice on the page ends with neither.
-- **Curation** is closed from the report page: **Done** asks the agent to end the session, waits for its closing line `SESSION-END: nothing open`, then exits the agent.
 
 ## Safety
 
