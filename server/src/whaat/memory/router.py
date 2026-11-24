@@ -231,11 +231,19 @@ def outcome_reads(call: ReadsCall, service: MemoryServiceDep, identity: Identity
 
 @router.post("/outcome/record", response_model=Text)
 def outcome_record(call: RecordCall, service: MemoryServiceDep, identity: IdentityDep) -> Text:
-    """memory-outcome record: held, misled or irrelevant per memory; held rescores at once."""
+    """memory-outcome record: held, misled or irrelevant per memory the session read or recalled; rescores at once.
+    When a codebase fact or recipe without a `source` holds, it gets `source: measured` and today's `confirmed`,
+    unless it misled since its last change."""
+    roots = service.roots(identity)
     try:
-        return Text(text=validity.record(service.roots(identity), call.session, call.outcome, call.paths))
+        skipped, accepted = validity.accept(roots, call.session, call.outcome, call.paths)
     except validity.OutcomeError as err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(err)) from err
+    marked = service.mark_measured(identity, accepted) if call.outcome == "held" else []
+    recorded = validity.record(roots, call.session, call.outcome, accepted)
+    if accepted:
+        validity.refresh(roots)
+    return Text(text="\n".join([*skipped, recorded, *marked]))
 
 
 @router.post("/validity/refresh", response_model=Text)

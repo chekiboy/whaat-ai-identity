@@ -232,7 +232,7 @@ def record_seen(
     session = session[:8]
     if not unchanged and part is not None:
         log(roots, session, {"op": "seen", "agent": agent, "digest": digest, "part": part, "parts": parts})
-    events = _events(roots)
+    events = log_events(roots)
     mine = parts_seen(events, session, agent, digest)
     every = set(range(1, parts + 1))
     if unchanged and not mine >= every:
@@ -331,7 +331,7 @@ def parts_given(
     first of them. A logged index line without a part counts as the whole index."""
     got: set[int] = set()
     since = None
-    for event in _events(roots) if events is None else events:
+    for event in log_events(roots) if events is None else events:
         if event.get("session") != session[:8]:
             continue
         if event.get("op") == "compact":
@@ -394,7 +394,7 @@ CORE_LOAD_BECAUSE = "session start: core (hook)"
 FRAME_CAP = 9500
 
 
-def _events(roots: Roots) -> list[dict[str, object]]:
+def log_events(roots: Roots) -> list[dict[str, object]]:
     try:
         lines = (roots.state / LOG_NAME).read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -414,7 +414,7 @@ def already_in(roots: Roots, session: str, agent: str, rel: str) -> str | None:
     """When this agent's context already holds rel, the time it got there, else None. The session start's core load
     and a compaction concern the main agent only; a subagent starts empty and has its own agent id."""
     at = None
-    for event in _events(roots):
+    for event in log_events(roots):
         if event.get("session") != session:
             continue
         mine = (event.get("agent") or "") == agent
@@ -523,7 +523,7 @@ def guard(roots: Roots, session: str, paths: list[str], must_exist: bool) -> str
     through recall, as `index` names it; None when the read may go. A Read is checked as it is, a reader command only
     on files that exist."""
     session = session[:8]
-    events = [e for e in _events(roots) if e.get("session") == session]
+    events = [e for e in log_events(roots) if e.get("session") == session]
     for path in paths:
         real = os.path.realpath(os.path.expanduser(path))
         if not real.endswith(".md"):

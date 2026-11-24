@@ -298,9 +298,9 @@ def build(settings: Settings, token: str, environ: Mapping[str, str] = os.enviro
         outcome: Literal["held", "misled", "irrelevant"],
         paths: Annotated[list[str], Field(description="Memory paths, as memory_reads printed them.")],
     ) -> str:
-        """Before reporting a task done, record whether the memories it recalled held up: held (relied on and right,
-        rescored at once), misled (wrong or stale: fix or supersede it now with memory_save) or irrelevant (its trigger
-        fired for a task it does not fit). Personal memories are not scored: leave them out."""
+        """Before reporting a task done, record whether the memories it read or recalled held up: held (relied on and
+        right), misled (wrong or stale: fix or supersede it now with memory_save) or irrelevant (its trigger fired for a
+        task it does not fit); each rescores at once. Personal memories are not scored: leave them out."""
         return text(api.call("POST", "/memory/outcome/record", {"session": this, "outcome": outcome, "paths": paths}))
 
     @mcp.tool(annotations=DESTRUCTIVE)

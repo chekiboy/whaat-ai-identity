@@ -831,7 +831,9 @@ export const outcomeReadsMutation = (options?: Partial<Options<OutcomeReadsData>
 /**
  * Outcome Record
  *
- * memory-outcome record: held, misled or irrelevant per memory; held rescores at once.
+ * memory-outcome record: held, misled or irrelevant per memory the session read or recalled; rescores at once.
+ * When a codebase fact or recipe without a `source` holds, it gets `source: measured` and today's `confirmed`,
+ * unless it misled since its last change.
  */
 export const outcomeRecordMutation = (options?: Partial<Options<OutcomeRecordData>>): UseMutationOptions<OutcomeRecordResponse, OutcomeRecordError, Options<OutcomeRecordData>> => {
     const mutationOptions: UseMutationOptions<OutcomeRecordResponse, OutcomeRecordError, Options<OutcomeRecordData>> = {

@@ -36,6 +36,10 @@ export type CardValidity = {
      * Source
      */
     source?: string | null;
+    /**
+     * Weight
+     */
+    weight?: number | null;
 };
 
 /**

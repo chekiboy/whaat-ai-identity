@@ -619,7 +619,7 @@ def outcome_record(
     outcome: Annotated[str, typer.Argument(help="held | misled | irrelevant")],
     paths: Annotated[list[str], typer.Argument(help="Memory paths as `reads` prints them.")],
 ) -> None:
-    """Record whether recalled memories held up, as memory-outcome record; held rescores at once."""
+    """Record whether memories this session read or recalled held up, as memory-outcome record; rescores at once."""
     _print_text(_memory_call("outcome/record", {"session": _session(), "outcome": outcome, "paths": paths}))
 
 

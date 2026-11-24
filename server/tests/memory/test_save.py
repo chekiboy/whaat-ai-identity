@@ -222,6 +222,7 @@ def test_browse_carries_each_store_memorys_score_and_none_for_a_personal_one(
         "age_days": 0,
         "history": None,
         "source": None,
+        "weight": 0.9,
         "outcomes": {},
     }
     assert cards["personal/user_y.md"]["validity"] is None

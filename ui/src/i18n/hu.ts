@@ -55,7 +55,8 @@ export const hu = {
       certain: "Nemrég megerősítve, bevált vagy hozzáadva: a háttere még nem kopott el.",
       likely: "Valószínűleg még igaz, de az utolsó megerősítése kezd régi lenni.",
       uncertain: "Rég nem erősítette meg semmi: mielőtt építesz rá, nézd meg, áll-e még.",
-      stale: "Régóta senki nem erősítette meg és nem épített rá: lehet, hogy már nem áll.",
+      stale:
+        "Régóta senki nem erősítette meg és nem épített rá, vagy csak egyszer, hosszú csend után: lehet, hogy már nem áll.",
       history: "Egy újabb memória felülírta: a változás miatt megmarad, de nem cselekszünk rá.",
       unscored: "Nincs pontozva: személyes memória, vagy nincs megerősítési dátuma, bevált kimenete vagy commitja.",
     },

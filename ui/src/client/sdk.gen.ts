@@ -572,7 +572,9 @@ export const outcomeReads = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Outcome Record
  *
- * memory-outcome record: held, misled or irrelevant per memory; held rescores at once.
+ * memory-outcome record: held, misled or irrelevant per memory the session read or recalled; rescores at once.
+ * When a codebase fact or recipe without a `source` holds, it gets `source: measured` and today's `confirmed`,
+ * unless it misled since its last change.
  */
 export const outcomeRecord = <ThrowOnError extends boolean = false>(options: Options<OutcomeRecordData, ThrowOnError>): RequestResult<OutcomeRecordResponses, OutcomeRecordErrors, ThrowOnError> => (options.client ?? client).post<OutcomeRecordResponses, OutcomeRecordErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
