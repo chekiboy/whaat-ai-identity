@@ -42,7 +42,8 @@ it is not running.
    commands it names still exist.
    A returning memory's first line says what it is and how far it can be trusted:
    `Memory: <file> (<type>) · Truthness: <what backs it>; held, misled, irrelevant <recalls since its last change> ·
-   Validity: <level> <score>, <age> d` (age in days since it was last confirmed, held or added; `supersedes <name>`
+   Validity: <level> <score>, <age> d` (the age the score counts, in days since it was last confirmed, held or added, a held after more than 30 days
+   of silence taking 7 days off only; `supersedes <name>`
    follows the type when it replaced another). A `⚠` line under it names the state of that knowledge, not what to do. What to do follows from the level, and from whether the code, the docs or another memory says
    otherwise:
    - `certain`: follow it.

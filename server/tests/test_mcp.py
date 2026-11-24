@@ -271,10 +271,11 @@ def test_an_outcome_counts_when_it_came_after_the_last_change_even_on_the_same_d
         f"{(now - datetime.timedelta(hours=1)).isoformat(timespec='seconds')}\tmisled\tacme/shop/feedback_x.md\tb4\n"
     )
 
-    _, opened = calls(
+    _, _, opened = calls(
         client,
         settings,
         token,
+        ("memory_open", opening),
         ("memory_record", {"outcome": "held", "paths": ["acme/shop/feedback_x.md"]}),
         ("memory_open", opening),
     )

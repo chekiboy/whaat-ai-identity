@@ -46,7 +46,7 @@ A recalled memory arrives with one line that tells the agent how much to rely on
 - its source: `measured`, `user-decision`, or `inference` (the agent's own conclusion);
 - how many times it **held** (it was used and proved right), **misled** (it was wrong or out of date) or was **irrelevant** (it opened for a task it did not fit).
 
-**Validity** is a score that fades with age. It starts from the source (1.0 for measured or user-decided, 0.75 for an inference, 0.9 when none is given) and loses 0.2 every 30 days. The clock restarts whenever the memory is confirmed or holds in use. The score gives a level:
+**Validity** is a score that fades with age. It starts from the source (1.0 for measured or user-decided, 0.75 for an inference) and loses 0.2 every 30 days. A memory without a source starts from 0.9, or from 0.8 when it is a codebase's fact or recipe (a `project` or `reference` memory in a repo folder), since the code can outdate it; when it holds, whaat gives it `source: measured` and today's `confirmed`, unless it misled since its last change. The clock restarts whenever the memory is confirmed or holds in use; a use after more than 30 days of silence winds it back one week only, so a single use after months does not make an old memory certain again. The score gives a level:
 
 | Level | Score | What the agent does |
 |---|---|---|
@@ -59,7 +59,7 @@ A memory backed only by an inference is treated as a hypothesis and checked firs
 
 A memory that was replaced by a newer one becomes **history**: it stays in the folder so the change can be traced, but the agent never acts on it. Personal memories are not scored.
 
-At the end of a task the agent records, for each memory it recalled, whether it held, misled or was irrelevant. Only "held" refreshes a memory's score; reading it alone does not.
+At the end of a task the agent records, for each memory it recalled, whether it held, misled or was irrelevant. Only "held" refreshes a memory's score; reading it alone does not. An outcome counts only for a memory the session read or recalled, and each session counts once.
 
 ## Saving
 

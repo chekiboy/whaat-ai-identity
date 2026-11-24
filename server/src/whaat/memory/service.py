@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 import threading
@@ -192,6 +193,32 @@ class MemoryService:
             rel = path.relative_to(root).as_posix()
             commit = self._commit(folder, sorted(changed), f"memory: {'add' if created else 'update'} {rel}", warnings)
         return SavedMemory(path=rel, created=created, commit=commit, warnings=warnings)
+
+    def mark_measured(self, identity: str, rel_paths: list[str]) -> list[str]:
+        """Give each codebase fact or recipe among these memories that has no `source` the source `measured`,
+        confirmed today, in one commit: a use that held has checked it against the code. One that misled since its
+        last change needs a fix instead, and is left as it is. The answer's lines."""
+        folder = self._registry.folder_of(identity)
+        root = folder / MEMORY_DIR
+        marked: dict[str, Path] = {}
+        warnings: list[str] = []
+        with self._lock:
+            unsourced: dict[str, Path] = {}
+            for rel in rel_paths:
+                path = self._inside(root, rel)
+                fm, _ = validity.parse(str(path))
+                if fm is not None and not fm.get("source") and validity.code_memory(rel, fm):
+                    unsourced[rel] = path
+            misled = validity.misled_since_change(self.roots(identity), list(unsourced)) if unsourced else set()
+            for rel, path in unsourced.items():
+                if rel in misled:
+                    continue
+                text = path.read_text(encoding="utf-8")
+                _write(folder, path, validity.with_measured_source(text, datetime.date.today().isoformat()))
+                marked[rel] = path
+            if marked:
+                self._commit(folder, list(marked.values()), f"memory: source measured on {', '.join(marked)}", warnings)
+        return [f"source measured, confirmed today: {rel}" for rel in marked] + warnings
 
     def delete(self, identity: str, rel_path: str) -> SavedMemory:
         folder = self._registry.folder_of(identity)

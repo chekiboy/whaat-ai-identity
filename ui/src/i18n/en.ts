@@ -52,7 +52,7 @@ export const en = {
       certain: "Confirmed, held or added recently: its backing has not had time to wear off.",
       likely: "Still probably true, but its last confirmation is getting old.",
       uncertain: "Long unconfirmed: check that it still holds before relying on it.",
-      stale: "Nobody confirmed or relied on it for a long time: it may no longer hold.",
+      stale: "Not confirmed or used for a long time, or used once after a long silence: it may no longer hold.",
       history: "Superseded by a newer memory: kept to show the change, never acted on.",
       unscored: "Not scored: a personal memory, or one with no confirmed date, held outcome or commit.",
     },

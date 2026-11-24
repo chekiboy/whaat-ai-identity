@@ -7,9 +7,9 @@ the store file it names history. A broken link whose name matches exactly one me
 prefix are set aside (an older name form) gets that memory's name as a suggestion.
 Stale candidates are checked against each repo's last-fetched origin default ref, never a working tree;
 nothing is fetched. Repo roots come from MEMORY_REPO_ROOTS (colon-separated); without it, no path is checked.
-Validity: a score starts at the `source` weight and loses 0.2 per 30 days since the latest of `confirmed`, the last
-`held` outcome (the identity's memory-outcomes.log) and the file's first commit. A superseded file without an index
-line is history: it stays out of the duplicate, stale and validity checks.
+Validity: scored as memory/validity.py describes, from the `source` weight, `confirmed`, the file's first commit and
+the days it held (the identity's memory-outcomes.log). A superseded file without an index line is history: it stays out
+of the duplicate, stale and validity checks.
 Size and index-drift are reported only for a memory unchanged for FRESH_DAYS (one still being shaped is left alone),
 and size only when the body is over its budget by more than OVER_BUDGET_SLACK.
 """
@@ -26,6 +26,7 @@ from whaat.memory.recall import Roots
 from whaat.memory.validity import (
     DECAY_DAYS,
     DECAY_PER_DAY,
+    HELD_AFTER_SILENCE_DAYS,
     LEVELS,
     PERSONAL_DIR,
     SOURCE_BASE,
@@ -303,7 +304,7 @@ def scan(
         if p in history:
             continue
         stem = os.path.basename(p)[:-3]
-        v = validity(fm, [fm.get("confirmed"), held.get(stem), added.get(p)], today)
+        v = validity(p, fm, [fm.get("confirmed"), added.get(p)], held.get(stem, []), today)
         if not v:
             undated += 1
             continue
@@ -381,10 +382,13 @@ def lint(
     tally += [f"history {len(history)}"] + ([f"undated {undated}"] if undated else [])
     out.append(f"\n## Validity ({', '.join(tally)})\n")
     out.append(
-        f"The source weight minus {DECAY_PER_DAY * DECAY_DAYS:.1f} per {DECAY_DAYS} days"
-        " since the latest of `confirmed`, the last"
+        f"The source weight minus {DECAY_PER_DAY * DECAY_DAYS:.1f} per {DECAY_DAYS} days since the latest of"
+        " `confirmed`, the first commit and a"
     )
-    out.append("`held` outcome and the first commit. Stale files are `verify` candidates;")
+    out.append(
+        f"`held` day (one after more than {DECAY_DAYS} days of silence counts {HELD_AFTER_SILENCE_DAYS} days only)."
+        " Stale files are `verify` candidates;"
+    )
     out.append("history files are superseded and never acted on.\n")
     for score, p, level, age, source in sorted(weak):
         out.append(f"- {level} {score:.2f}: {p} ({age} days, source {source})")

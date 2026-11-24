@@ -170,3 +170,19 @@ def test_lint_counts_an_outcome_that_came_after_the_last_change_on_the_same_day(
     text = client.post("/api/v1/memory/lint", json={}, headers=trial).json()["text"]
 
     assert "- misled: feedback_fixed — check that it was fixed or superseded" in text
+
+
+def test_lint_scores_a_codebase_fact_from_its_weight_and_the_days_it_held(
+    client: TestClient, trial: dict[str, str], settings: Any
+) -> None:
+    today = datetime.date.today()
+    folder = settings.state_dir / "identities/trial"
+    confirmed = today - datetime.timedelta(days=75)
+    head = f"---\nname: project_db\ndescription: d\ntype: project\nconfirmed: {confirmed}\n---\nB.\n"
+    write(folder / "memory/acme/shop/project_db.md", head)
+    held = (today - datetime.timedelta(days=50)).isoformat()
+    write(folder / "state/memory-outcomes.log", f"{held}T10:00:00+00:00\theld\tacme/shop/project_db.md\ts1\n")
+
+    text = client.post("/api/v1/memory/lint", json={}, headers=trial).json()["text"]
+
+    assert "- uncertain 0.47: acme/shop/project_db.md (50 days, source ?)" in text

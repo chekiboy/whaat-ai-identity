@@ -122,6 +122,7 @@ class CardValidity(BaseModel):
     age_days: int | None = None
     history: str | None = None
     source: str | None = None
+    weight: float | None = None
     outcomes: dict[str, int] = Field(default_factory=dict)
 
 

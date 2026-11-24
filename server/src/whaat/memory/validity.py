@@ -1,7 +1,10 @@
 """memory-validity and memory-outcome on one identity's memory: scores, read and outcome logs, the Read hook's note.
 
-A score starts at the `source` weight and loses 0.2 per 30 days since the latest of `confirmed`, the last `held`
-outcome and the file's first commit. A superseded file without an index line is history and is not scored. The logs
+A score starts at the `source` weight and loses 0.2 per 30 days since its anchor: the latest of `confirmed` and the
+file's first commit, moved to each day it held. A use within 30 days of the previous one moves the anchor to that day; a
+use after a longer silence moves it forward by one week only. A memory without a `source` weighs
+0.9, or 0.8 when it is a codebase's fact or recipe (a repo dir's `project` or `reference`), which the code can outdate.
+A superseded file without an index line is history and is not scored. The logs
 (memory-reads.log, memory-outcomes.log: one tab-separated line per event) and memory-validity.json sit in the
 identity's state dir. The personal dir is left out everywhere: it is not scored,
 its reads are not logged, and its outcomes are not recorded.
@@ -14,11 +17,14 @@ import re
 import subprocess
 import tempfile
 
-from whaat.memory.recall import DIR_MODE, LOG_NAME, PERSONAL, Roots
+from whaat.memory.recall import DIR_MODE, LOG_NAME, PERSONAL, Roots, log_events
 
 SOURCE_BASE: dict[str | None, float] = {"measured": 1.0, "user-decision": 1.0, "inference": 0.75, None: 0.9}
+UNSET_CODE_BASE = 0.8
+CODE_TYPES = ("project", "reference")
 DECAY_DAYS = 30
 DECAY_PER_DAY = 0.2 / DECAY_DAYS
+HELD_AFTER_SILENCE_DAYS = 7
 LEVELS = ((0.8, "certain"), (0.6, "likely"), (0.4, "uncertain"), (0.0, "stale"))
 UNQUOTED_FIELDS = ("source", "confirmed", "supersedes")
 SCORES_FILE = "memory-validity.json"
@@ -126,27 +132,30 @@ def commit_times(store: str) -> tuple[dict[str, str], dict[str, str]]:
     return added, last
 
 
-def recall_outcomes(state: str, changed: dict[str, str]) -> tuple[dict[str, str], dict[str, dict[str, int]]]:
-    """From the outcome log: last `held` day per memory name, and outcome counts since the memory last changed."""
+def recall_outcomes(state: str, changed: dict[str, str]) -> tuple[dict[str, list[str]], dict[str, dict[str, int]]]:
+    """From the outcome log, per memory name: the days it held, in order, and the outcome counts since the memory last
+    changed, each session counted once per outcome."""
     path = os.path.join(state, OUTCOMES_LOG)
-    held: dict[str, str] = {}
+    held: dict[str, set[str]] = {}
     counts: dict[str, dict[str, int]] = {}
+    seen: set[tuple[str, str, str]] = set()
     if os.path.exists(path):
         with open(path, encoding="utf-8") as handle:
             for line in handle:
                 parts = line.rstrip("\n").split("\t")
                 if len(parts) != 4:
                     continue
-                day, outcome, rel = parts[0], parts[1], parts[2]
+                day, outcome, rel, session = parts
                 stem = os.path.basename(rel)[:-3]
                 if stem not in changed:
                     continue
-                if _after(day, changed[stem]):
+                if _after(day, changed[stem]) and (stem, outcome, session) not in seen:
+                    seen.add((stem, outcome, session))
                     counts.setdefault(stem, {}).setdefault(outcome, 0)
                     counts[stem][outcome] += 1
                 if outcome == "held":
-                    held[stem] = max(day[:10], held.get(stem, day[:10]))
-    return held, counts
+                    held.setdefault(stem, set()).add(day[:10])
+    return {stem: sorted(days) for stem, days in held.items()}, counts
 
 
 def _after(event: str, change: str) -> bool:
@@ -165,13 +174,60 @@ def as_date(value: object) -> datetime.date | None:
         return None
 
 
-def validity(fm: dict[str, str], anchors: list[str | None], today: datetime.date) -> tuple[float, str, int] | None:
-    days = [d for d in map(as_date, anchors) if d]
-    if not days:
+def code_memory(rel: str, fm: dict[str, str]) -> bool:
+    """A codebase's fact or recipe: a `project` or `reference` memory in a repo dir."""
+    return len(rel.replace(os.sep, "/").split("/")) > 2 and fm.get("type") in CODE_TYPES
+
+
+def source_weight(rel: str, fm: dict[str, str]) -> float:
+    source = fm.get("source")
+    if source and source in SOURCE_BASE:
+        return SOURCE_BASE[source]
+    return UNSET_CODE_BASE if code_memory(rel, fm) else SOURCE_BASE[None]
+
+
+def misled_since_change(roots: Roots, rels: list[str]) -> set[str]:
+    """Those of `rels` with a `misled` outcome since their own last commit."""
+    _, changed = commit_times(roots.store)
+    _, counts = recall_outcomes(str(roots.state), {os.path.basename(rel)[:-3]: changed.get(rel, "") for rel in rels})
+    return {rel for rel in rels if counts.get(os.path.basename(rel)[:-3], {}).get("misled")}
+
+
+def with_measured_source(text: str, day: str) -> str:
+    """The memory's text with `source: measured` and `confirmed: <day>` in its frontmatter, replacing any earlier
+    `source` or `confirmed` line."""
+    m = re.match(r"(---\n)(.*?)(\n---\n?)(.*)", text, re.S)
+    if not m:
+        return text
+    kept = [line for line in m.group(2).splitlines() if not re.match(r"\s*(source|confirmed):", line)]
+    return m.group(1) + "\n".join([*kept, "source: measured", f"confirmed: {day}"]) + m.group(3) + m.group(4)
+
+
+def anchor_day(start: list[str | None], held: list[str]) -> datetime.date | None:
+    """The day a score's age counts from, as the module says; None with no start and no held day."""
+    starts = [d for d in map(as_date, start) if d]
+    used = sorted({d for d in map(as_date, held) if d})
+    if not starts and not used:
         return None
-    age = (today - max(days)).days
-    base = SOURCE_BASE.get(fm.get("source"), SOURCE_BASE[None])
-    score = max(0.0, base - DECAY_PER_DAY * age)
+    anchor = previous = max(starts) if starts else used[0]
+    for day in used:
+        if day > anchor:
+            if (day - previous).days <= DECAY_DAYS:
+                anchor = day
+            else:
+                anchor += datetime.timedelta(days=HELD_AFTER_SILENCE_DAYS)
+        previous = max(previous, day)
+    return anchor
+
+
+def validity(
+    rel: str, fm: dict[str, str], start: list[str | None], held: list[str], today: datetime.date
+) -> tuple[float, str, int] | None:
+    anchor = anchor_day(start, held)
+    if anchor is None:
+        return None
+    age = (today - anchor).days
+    score = max(0.0, source_weight(rel, fm) - DECAY_PER_DAY * age)
     return score, next(name for floor, name in LEVELS if score >= floor), age
 
 
@@ -220,18 +276,24 @@ def score_store(store: str, state: str, today: datetime.date) -> dict[str, dict[
     entries: dict[str, dict[str, object]] = {}
     for rel, (fm, indexed) in sorted(files.items()):
         stem = os.path.basename(rel)[:-3]
-        anchors = {"confirmed": fm.get("confirmed"), "held": held.get(stem), "first_commit": added.get(rel)}
+        held_days = held.get(stem, [])
+        anchors = {
+            "confirmed": fm.get("confirmed"),
+            "held": held_days[-1] if held_days else None,
+            "first_commit": added.get(rel),
+        }
         entry: dict[str, object] = {
             "description": fm.get("description", "").strip("\"'"),
             "source": fm.get("source"),
             "anchors": {k: v for k, v in anchors.items() if as_date(v)},
+            "weight": source_weight(rel, fm),
         }
         if counts.get(stem):
             entry["outcomes"] = counts[stem]
         if stem in superseded and not indexed:
             entry["history"] = superseded[stem]
         else:
-            v = validity(fm, list(anchors.values()), today)
+            v = validity(rel, fm, [anchors["confirmed"], anchors["first_commit"]], held_days, today)
             if v:
                 entry.update(score=round(v[0], 3), level=v[1], age_days=v[2])
         entries[rel] = entry
@@ -245,7 +307,9 @@ def refresh(roots: Roots) -> dict[str, object]:
         "store": store,
         "rule": "source weight ("
         + ", ".join(f"{k or 'unset'} {v}" for k, v in SOURCE_BASE.items())
-        + f") minus 0.2 per {DECAY_DAYS} days since the latest anchor",
+        + f"; unset in a repo dir's {' or '.join(CODE_TYPES)} {UNSET_CODE_BASE}) minus 0.2 per {DECAY_DAYS} days since"
+        f" the anchor (latest of confirmed and first commit, moved to each held day; after more than {DECAY_DAYS} days"
+        f" of silence a held day moves it {HELD_AFTER_SILENCE_DAYS} days only)",
         "levels": {name: floor for floor, name in LEVELS},
         "memories": score_store(store, state, today),
     }
@@ -326,8 +390,8 @@ def read_note(roots: Roots, session: str, path: str) -> str | None:
         note = f"superseded by {entry['history']}: history, never act on it"
     elif entry.get("level") in ("uncertain", "stale"):
         note = (
-            f"{entry['level']} ({entry['score']:.2f}, {entry['age_days']} days since it was last confirmed, "
-            "held or added): check that it still holds before acting on it"
+            f"{entry['level']} ({entry['score']:.2f}, scored as {entry['age_days']} days old): check that it still "
+            "holds before acting on it"
         )
     else:
         return None
@@ -365,26 +429,62 @@ def reads(roots: Roots, session: str) -> str:
     return "\n".join(seen) if seen else f"no store reads logged for session {session}"
 
 
-def record(roots: Roots, session: str, outcome: str, paths: list[str]) -> str:
+def session_memories(roots: Roots, session: str) -> set[str]:
+    """The store memories this session recalled (opened to recall) or read with the Read tool, leaving out a Read of a
+    file it opened only to save, curate or review, or dumped."""
+    read: set[str] = set()
+    path = roots.state / READS_LOG
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            parts = line.split("\t")
+            if len(parts) == 4 and parts[3] == session:
+                read.add(parts[2])
+    recalled: set[str] = set()
+    handled: set[str] = set()
+    for event in log_events(roots):
+        if event.get("session") != session:
+            continue
+        if event.get("op") == "open":
+            (recalled if event.get("purpose", "recall") == "recall" else handled).add(str(event.get("file")))
+        elif event.get("op") == "dump" and isinstance(files := event.get("files"), list):
+            handled.update(map(str, files))
+    return recalled | (read - handled)
+
+
+def accept(roots: Roots, session: str, outcome: str, paths: list[str]) -> tuple[list[str], list[str]]:
+    """The memories among `paths` that the session read or recalled, as store paths, and a line for each left out."""
     if outcome not in OUTCOMES:
         raise OutcomeError(f"outcome must be one of {', '.join(OUTCOMES)}")
     session = session[:8]
     if not session:
         raise OutcomeError("no session id: pass <session8>, or run inside Claude Code")
-    lines, done = [], 0
-    for rel in paths:
+    lines: list[str] = []
+    accepted: list[str] = []
+    seen = session_memories(roots, session)
+    store = os.path.realpath(roots.store)
+    for given in paths:
+        rel = (
+            given
+            if given.startswith("personal:")
+            else os.path.relpath(os.path.realpath(os.path.join(store, given)), store)
+        )
+        path = os.path.join(store, rel)
         if rel.startswith("personal:") or _personal(rel):
-            lines.append(f"skipped {rel}: personal memories are not scored, so their outcomes are not recorded")
-            continue
-        if not rel.endswith(".md") or not os.path.isfile(os.path.join(roots.store, rel)):
-            lines.append(f"skipped {rel}: not a memory file in the store (use the path `reads` prints)")
-            continue
-        _append(roots, OUTCOMES_LOG, [outcome, rel, session])
-        done += 1
-    lines.append(f"recorded {outcome} for {done} memories")
-    if outcome == "held" and done:
-        refresh(roots)
-    return "\n".join(lines)
+            lines.append(f"skipped {given}: personal memories are not scored, so their outcomes are not recorded")
+        elif not is_memory_file(os.path.dirname(path), os.path.basename(rel), store) or not os.path.isfile(path):
+            lines.append(f"skipped {given}: not a memory file in the store (use the path `reads` prints)")
+        elif rel not in seen:
+            lines.append(f"skipped {given}: session {session} did not read or recall it, so it has no outcome to judge")
+        else:
+            accepted.append(rel)
+    return lines, accepted
+
+
+def record(roots: Roots, session: str, outcome: str, rels: list[str]) -> str:
+    """Log the outcome for memories `accept` let through; the caller rescores."""
+    for rel in rels:
+        _append(roots, OUTCOMES_LOG, [outcome, rel, session[:8]])
+    return f"recorded {outcome} for {len(rels)} memories"
 
 
 def quality(roots: Roots, file: str) -> str:
@@ -417,8 +517,9 @@ def quality(roots: Roots, file: str) -> str:
         lines = [f"{truthness} · Validity: {entry['level']} {entry['score']:.2f}, {entry['age_days']} d"]
         if entry["level"] in ("uncertain", "stale"):
             lines.append(
-                f"⚠ {str(entry['level']).capitalize()}: nobody has confirmed it or relied on it for {entry['age_days']}"
-                " days."
+                f"⚠ {str(entry['level']).capitalize()}: scored as {entry['age_days']} days old; a confirmation, or a"
+                f" use within {DECAY_DAYS} days of the previous evidence, resets the age; a use after a longer silence"
+                f" takes {HELD_AFTER_SILENCE_DAYS} days off only."
             )
     reasons = []
     if entry.get("source") == "inference":

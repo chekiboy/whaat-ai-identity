@@ -65,6 +65,17 @@
               }
             ],
             "title": "Source"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
           }
         },
         "title": "CardValidity",
@@ -7395,7 +7406,7 @@
     },
     "/api/v1/memory/outcome/record": {
       "post": {
-        "description": "memory-outcome record: held, misled or irrelevant per memory; held rescores at once.",
+        "description": "memory-outcome record: held, misled or irrelevant per memory the session read or recalled; rescores at once.\nWhen a codebase fact or recipe without a `source` holds, it gets `source: measured` and today's `confirmed`,\nunless it misled since its last change.",
         "operationId": "outcome_record",
         "requestBody": {
           "content": {
