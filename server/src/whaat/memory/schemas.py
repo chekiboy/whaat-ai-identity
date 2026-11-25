@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from whaat.reports.types.base import Strict
 
 MemoryPath = Annotated[str, StringConstraints(pattern=r"^[^\n]+\.md$")]
-Line = Annotated[str, StringConstraints(min_length=1, pattern=r"^[^\n]+$")]
+Line = Annotated[str, StringConstraints(min_length=1, pattern=r"^[^\r\n]+$")]
 
 
 class MemorySave(Strict):
@@ -19,6 +19,9 @@ class MemorySave(Strict):
     trigger: Line = Field(description="The index line's text after the name: when to open the file.")
     unindex: list[MemoryPath] = Field(
         default_factory=list, description="Memories this one supersedes: their index lines go, their files stay."
+    )
+    reason: Line | None = Field(
+        default=None, description="Why it is saved, changed or removed, in one line; the commit message carries it."
     )
 
 
@@ -122,6 +125,7 @@ class CardValidity(BaseModel):
     age_days: int | None = None
     history: str | None = None
     source: str | None = None
+    weight: float | None = None
     outcomes: dict[str, int] = Field(default_factory=dict)
 
 
@@ -458,10 +462,14 @@ class MigrationPlanSummary(BaseModel):
 
 
 class MigrationSent(BaseModel):
-    command: str = Field(description="The call that imports the chosen groups; typed into the session when it runs.")
-    session: str | None
-    typed: bool
-    detail: str | None = Field(description="Why it was not typed: no running migration session, or the readback.")
+    command: str = Field(description="The call that imports the chosen groups; handed to the waiting session.")
+    handed: bool = Field(description="The waiting migration session takes the call; false: the user pastes it.")
+    detail: str | None = Field(description="Why it was not handed: no migration session waits for the page.")
+
+
+class MigrationStarted(BaseModel):
+    command: str = Field(description="The line to paste into a terminal: it starts the migration as the identity.")
+    waiting: bool = Field(description="A migration session of this identity already waits for the page.")
 
 
 class MigrationStart(Strict):

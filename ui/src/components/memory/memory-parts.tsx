@@ -54,7 +54,6 @@ export const HALFLIFE: Record<(typeof HALFLIFE_TYPES)[number], number> = {
   feedback: 120,
   user: 365,
 };
-export const SOURCE_WEIGHT: Record<string, number> = { measured: 1, "user-decision": 1, inference: 0.75 };
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -78,10 +77,7 @@ export function MemoryMeta({ memory }: { memory: MemoryCard }) {
   const dir = memory.path.includes("/") ? memory.path.slice(0, memory.path.lastIndexOf("/")) : t("memory.meta.root");
   const halfType = fm.type && isOne(HALFLIFE_TYPES, fm.type) ? fm.type : null;
   const halfDays = halfType ? HALFLIFE[halfType] : undefined;
-  const halfScore =
-    halfDays && v?.age_days != null
-      ? (SOURCE_WEIGHT[v.source ?? ""] ?? 0.9) * 0.5 ** (v.age_days / halfDays)
-      : undefined;
+  const halfScore = halfDays && v?.age_days != null ? (v.weight ?? 0.9) * 0.5 ** (v.age_days / halfDays) : undefined;
   return (
     <div className="mem-meta">
       <dl>

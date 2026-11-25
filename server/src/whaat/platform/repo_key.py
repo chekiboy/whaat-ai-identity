@@ -1,7 +1,12 @@
+import re
 import subprocess
 from pathlib import Path
 
+from whaat.platform.system import system
+
 MAX_LOCAL_HOPS = 3
+# on Windows a drive path (C:\repos\x, C:/repos/x) is a local folder; elsewhere x:/path is a one-letter ssh host
+DRIVE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
 
 
 def _git(folder: Path, *args: str) -> str | None:
@@ -14,7 +19,7 @@ def remote_path(url: str | None, base: Path, depth: int = 0) -> str | None:
     if not url or depth > MAX_LOCAL_HOPS:
         return None
     url = url.removeprefix("file://")
-    if url.startswith(("/", "~", ".")):
+    if url.startswith(("/", "~", ".")) or (system() == "windows" and DRIVE_PATH.match(url)):
         local = (base / Path(url).expanduser()).resolve()
         return remote_path(_git(local, "remote", "get-url", "origin"), local, depth + 1) if local.is_dir() else None
     if "://" in url:

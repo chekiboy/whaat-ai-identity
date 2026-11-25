@@ -1,6 +1,6 @@
 """What every whaat hook shares: where the server is, who calls it, and one HTTP call that never fails a tool call.
 
-Stdlib only, so a hook starts as fast as a bare python3. Settings are read as whaat's config reads them: the env var,
+Stdlib only, so a hook starts fast under any Python. Settings are read as whaat's config reads them: the env var,
 else the same key in the `env` block of the Claude config's settings.json (CLAUDE_CONFIG_DIR, else ~/.claude).
 """
 
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import urllib.error
 import urllib.request
@@ -17,7 +18,13 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 1111
 OTHER_INSTANCE_PORT = 1112
 TIMEOUT_SECONDS = 2.0
-CLI = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts", "whaat")
+PLUGIN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CLI = os.path.join(PLUGIN, "scripts", "whaat")
+# the server project beside this plugin; run without bash, which a Windows hook may not have
+SERVER = os.path.normpath(os.path.join(PLUGIN, "..", "..", "server"))
+# on Windows a drive path (C:\repos\x, C:/repos/x) is a local folder; elsewhere x:/path is a one-letter ssh host
+DRIVE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
+WINDOWS = os.name == "nt"
 
 
 def _settings_env() -> dict[str, str]:
@@ -77,7 +84,7 @@ def _remote_path(url, base, depth=0):
         return None
     if url.startswith("file://"):
         url = url[len("file://"):]
-    if url.startswith(("/", "~", ".")):
+    if url.startswith(("/", "~", ".")) or (WINDOWS and DRIVE_PATH.match(url)):
         local = os.path.normpath(os.path.join(base, os.path.expanduser(url)))
         return _remote_path(_git(local, "remote", "get-url", "origin"), local, depth + 1) if os.path.isdir(local) else None
     if "://" in url:
@@ -106,7 +113,9 @@ def repo_key(start):
 def ensure_server():
     """Start this instance's whaat through the CLI when it does not run; True when the CLI says it runs."""
     try:
-        result = subprocess.run([CLI, "ensure"], capture_output=True, text=True, timeout=60)
+        result = subprocess.run(
+            ["uv", "run", "--quiet", "--project", SERVER, "whaat", "ensure"], capture_output=True, text=True, timeout=60
+        )
     except (OSError, subprocess.SubprocessError):
         return False
     return result.returncode == 0

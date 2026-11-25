@@ -36,6 +36,10 @@ export type CardValidity = {
      * Source
      */
     source?: string | null;
+    /**
+     * Weight
+     */
+    weight?: number | null;
 };
 
 /**
@@ -392,13 +396,18 @@ export type CurationSection = {
  * CurationStarted
  */
 export type CurationStarted = {
-    session: TerminalSession;
     /**
-     * Started
+     * Command
      *
-     * False when a curation session of this identity was already running.
+     * The line to paste into a terminal: it starts the curation report as the identity.
      */
-    started: boolean;
+    command: string;
+    /**
+     * Waiting
+     *
+     * A curation session of this identity already waits for the page.
+     */
+    waiting: boolean;
 };
 
 /**
@@ -746,13 +755,13 @@ export type DecisionsSent = {
     /**
      * At
      *
-     * When it was typed (YYYY-MM-DD HH:MM); null when it was not.
+     * When it was handed (YYYY-MM-DD HH:MM); null when it was not.
      */
     at?: string | null;
     /**
      * Command
      *
-     * The call that applies the decisions; typed into the session when it runs.
+     * The call; handed to the waiting curation session, else shown to paste.
      */
     command: string;
     /**
@@ -762,19 +771,15 @@ export type DecisionsSent = {
     /**
      * Detail
      *
-     * Why it was not typed: no running session, or the prompt readback.
+     * Why it was not handed: no session waits, or nothing to apply.
      */
     detail: string | null;
     /**
-     * Session
+     * Handed
      *
-     * The curation session it was typed into, or would have been.
+     * The waiting session takes the call; false: the user pastes it.
      */
-    session: string | null;
-    /**
-     * Typed
-     */
-    typed: boolean;
+    handed: boolean;
     /**
      * Warnings
      */
@@ -875,9 +880,9 @@ export type DistilledAnalysis = {
  */
 export type DoneCall = {
     /**
-     * Identity
+     * Report Id
      */
-    identity: string;
+    report_id: string;
 };
 
 /**
@@ -1008,40 +1013,6 @@ export type FidelityCall = {
      * The commit holding it as it was.
      */
     rev?: string;
-};
-
-/**
- * Folder
- */
-export type Folder = {
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Repo
-     *
-     * Whether it holds a .git, a hint that it is a project.
-     */
-    repo: boolean;
-};
-
-/**
- * Folders
- */
-export type Folders = {
-    /**
-     * Folders
-     */
-    folders: Array<Folder>;
-    /**
-     * Parent
-     */
-    parent: string | null;
-    /**
-     * Path
-     */
-    path: string;
 };
 
 /**
@@ -1206,6 +1177,18 @@ export type HttpValidationError = {
 };
 
 /**
+ * Handed
+ */
+export type Handed = {
+    /**
+     * Call
+     *
+     * The call to run now, composed by whaat from the user's click; null: none yet.
+     */
+    call: string | null;
+};
+
+/**
  * Health
  */
 export type Health = {
@@ -1338,7 +1321,7 @@ export type IdentityPreferences = {
     /**
      * Agents
      *
-     * An identity's own Claude Code config dir: a terminal session of that identity starts claude with it, whaat's plugin and the identity's token.
+     * An identity's own Claude Code config dir: a session of that identity starts claude with it, whaat's plugin and the identity's token.
      */
     agents?: {
         [key: string]: string;
@@ -1781,6 +1764,12 @@ export type MemorySave = {
      */
     path: string;
     /**
+     * Reason
+     *
+     * Why it is saved, changed or removed, in one line; the commit message carries it.
+     */
+    reason?: string | null;
+    /**
      * Trigger
      *
      * The index line's text after the name: when to open the file.
@@ -2163,23 +2152,21 @@ export type MigrationSent = {
     /**
      * Command
      *
-     * The call that imports the chosen groups; typed into the session when it runs.
+     * The call that imports the chosen groups; handed to the waiting session.
      */
     command: string;
     /**
      * Detail
      *
-     * Why it was not typed: no running migration session, or the readback.
+     * Why it was not handed: no migration session waits for the page.
      */
     detail: string | null;
     /**
-     * Session
+     * Handed
+     *
+     * The waiting migration session takes the call; false: the user pastes it.
      */
-    session: string | null;
-    /**
-     * Typed
-     */
-    typed: boolean;
+    handed: boolean;
 };
 
 /**
@@ -2225,6 +2212,24 @@ export type MigrationStart = {
 };
 
 /**
+ * MigrationStarted
+ */
+export type MigrationStarted = {
+    /**
+     * Command
+     *
+     * The line to paste into a terminal: it starts the migration as the identity.
+     */
+    command: string;
+    /**
+     * Waiting
+     *
+     * A migration session of this identity already waits for the page.
+     */
+    waiting: boolean;
+};
+
+/**
  * NewIdentity
  */
 export type NewIdentity = {
@@ -2237,31 +2242,19 @@ export type NewIdentity = {
 };
 
 /**
- * NewTerminal
+ * NextCall
  */
-export type NewTerminal = {
+export type NextCall = {
     /**
-     * Cwd
+     * Kind
+     */
+    kind: 'curation' | 'migration';
+    /**
+     * Work
      *
-     * The project folder to start in; the configured folder if none.
+     * The curation report's id, or the migration plan's, the session waits for.
      */
-    cwd?: string | null;
-    /**
-     * Persona
-     */
-    persona: string;
-};
-
-/**
- * OpenNative
- */
-export type OpenNative = {
-    /**
-     * App
-     *
-     * terminal-app or iterm2; the saved preference when none.
-     */
-    app?: string | null;
+    work: string;
 };
 
 /**
@@ -2405,7 +2398,6 @@ export type Preferences = {
      * Language
      */
     language?: 'en' | 'hu';
-    terminal: TerminalPreferences;
 };
 
 /**
@@ -2417,37 +2409,6 @@ export type PreferencesPatch = {
      * Language
      */
     language?: 'en' | 'hu' | null;
-    terminal?: TerminalPatch | null;
-};
-
-/**
- * Project
- */
-export type Project = {
-    /**
-     * Exists
-     */
-    exists: boolean;
-    /**
-     * Path
-     */
-    path: string;
-    /**
-     * Used
-     *
-     * When a session last started in it, in Unix seconds.
-     */
-    used: number;
-};
-
-/**
- * Projects
- */
-export type Projects = {
-    /**
-     * Projects
-     */
-    projects: Array<Project>;
 };
 
 /**
@@ -2722,18 +2683,6 @@ export type RecordCall = {
 };
 
 /**
- * RenameTerminal
- */
-export type RenameTerminal = {
-    /**
-     * Label
-     *
-     * The new name; empty takes the name off.
-     */
-    label: string;
-};
-
-/**
  * ReportBody
  */
 export type ReportBody = {
@@ -2994,18 +2943,6 @@ export type RowFigure = {
 };
 
 /**
- * RunState
- */
-export type RunState = {
-    /**
-     * State
-     *
-     * open (Done not sent), waiting, asked or exited.
-     */
-    state: string;
-};
-
-/**
  * SavedCurationReport
  */
 export type SavedCurationReport = {
@@ -3094,22 +3031,6 @@ export type SavedMemory = {
      * Warnings
      */
     warnings: Array<string>;
-};
-
-/**
- * SavedProject
- */
-export type SavedProject = {
-    /**
-     * Path
-     */
-    path: string;
-    /**
-     * Used
-     *
-     * When a session last started in it, in Unix seconds.
-     */
-    used: number;
 };
 
 /**
@@ -3418,7 +3339,7 @@ export type StartCuration = {
     /**
      * Cwd
      *
-     * The folder to start in; the configured folder if none.
+     * The folder the line starts in; the terminal's own if none.
      */
     cwd?: string | null;
     /**
@@ -3457,266 +3378,6 @@ export type SubagentCore = {
      * What a subagent gets as context at its start: the global index, the every-agent core files when one is marked, then the memory map.
      */
     text: string | null;
-};
-
-/**
- * TerminalApps
- */
-export type TerminalApps = {
-    /**
-     * Installed
-     *
-     * The terminal apps of this machine a session can open in.
-     */
-    installed: Array<string>;
-};
-
-/**
- * TerminalCursor
- */
-export type TerminalCursor = {
-    /**
-     * Blink
-     */
-    blink: boolean;
-    /**
-     * Style
-     *
-     * block, underline or bar
-     */
-    style: string;
-};
-
-/**
- * TerminalFont
- */
-export type TerminalFont = {
-    /**
-     * Family
-     *
-     * A CSS font family; the app's SF Mono is ui-monospace.
-     */
-    family: string;
-    /**
-     * Size
-     */
-    size: number;
-};
-
-/**
- * TerminalPatch
- */
-export type TerminalPatch = {
-    /**
-     * Command
-     *
-     * An empty string goes back to the default.
-     */
-    command?: string | null;
-    /**
-     * Opener
-     */
-    opener?: 'browser' | 'terminal-app' | 'iterm2' | null;
-    /**
-     * Theme
-     */
-    theme?: string | null;
-};
-
-/**
- * TerminalPreferences
- */
-export type TerminalPreferences = {
-    /**
-     * Command
-     *
-     * The command a new session runs: the saved one, or the default.
-     */
-    command: string;
-    /**
-     * Default Command
-     *
-     * The command when none is saved (WHAAT_TERMINAL_COMMAND, else claude).
-     */
-    default_command: string;
-    /**
-     * Opener
-     *
-     * Where a session opens: here, or a terminal app.
-     */
-    opener?: 'browser' | 'terminal-app' | 'iterm2';
-    /**
-     * Projects
-     */
-    projects?: Array<SavedProject>;
-    /**
-     * Theme
-     */
-    theme?: string;
-};
-
-/**
- * TerminalSession
- *
- * One terminal: a tmux session of whaat's own tmux server, running the start command in the user's login shell.
- */
-export type TerminalSession = {
-    /**
-     * Asking
-     *
-     * Claude Code waits in it for an answer to a dialog (trust, permission, a question).
-     */
-    asking?: boolean;
-    /**
-     * Attached
-     *
-     * How many windows show it now.
-     */
-    attached: number;
-    /**
-     * Busy
-     *
-     * Claude Code is working on a turn in it.
-     */
-    busy?: boolean;
-    /**
-     * Command
-     */
-    command: string;
-    /**
-     * Created
-     *
-     * When tmux started it, in Unix seconds.
-     */
-    created: number;
-    /**
-     * Cwd
-     */
-    cwd: string;
-    /**
-     * Done
-     *
-     * A whaat skill's last turn in it ended in `[whaat] done`.
-     */
-    done?: boolean;
-    /**
-     * Gone
-     *
-     * whaat recorded it, but tmux no longer runs it (tmux stopped, the machine restarted).
-     */
-    gone?: boolean;
-    /**
-     * Idle
-     *
-     * The start command has exited and only the shell waits.
-     */
-    idle?: boolean;
-    /**
-     * Label
-     *
-     * A name the user gave it; empty if none.
-     */
-    label?: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Number
-     */
-    number: number;
-    /**
-     * Persona
-     */
-    persona: string;
-    /**
-     * Program
-     *
-     * The program in the foreground of its pane, as tmux names it.
-     */
-    program?: string;
-    /**
-     * Tmux Id
-     *
-     * tmux's own id of the session ($N), as recorded when it started.
-     */
-    tmux_id?: string;
-};
-
-/**
- * TerminalSessions
- */
-export type TerminalSessions = {
-    /**
-     * Command
-     *
-     * The start command a new session runs.
-     */
-    command: string;
-    /**
-     * Cwd
-     *
-     * The folder a new session starts in.
-     */
-    cwd: string;
-    /**
-     * Sessions
-     */
-    sessions: Array<TerminalSession>;
-};
-
-/**
- * TerminalTheme
- *
- * A theme read from this machine's terminal apps, its colours as xterm names them.
- */
-export type TerminalTheme = {
-    /**
-     * Colors
-     */
-    colors: {
-        [key: string]: string;
-    };
-    cursor: TerminalCursor;
-    /**
-     * Default
-     *
-     * The profile the app itself opens with.
-     */
-    default?: boolean;
-    font: TerminalFont;
-    /**
-     * Id
-     *
-     * The source and the profile, e.g. "terminal-app:Clear Dark".
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Optionismeta
-     *
-     * The Option key sends Meta (Esc+), as in the app's profile.
-     */
-    optionIsMeta: boolean;
-    /**
-     * Source
-     *
-     * The app it comes from: Terminal or iTerm2.
-     */
-    source: string;
-};
-
-/**
- * TerminalThemes
- */
-export type TerminalThemes = {
-    /**
-     * Themes
-     */
-    themes: Array<TerminalTheme>;
 };
 
 /**
@@ -3852,36 +3513,6 @@ export type SendRevertResponses = {
 
 export type SendRevertResponse = SendRevertResponses[keyof SendRevertResponses];
 
-export type RunStateData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Identity
-         */
-        identity: string;
-    };
-    url: '/api/v1/curation/run-state';
-};
-
-export type RunStateErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RunStateError = RunStateErrors[keyof RunStateErrors];
-
-export type RunStateResponses = {
-    /**
-     * Successful Response
-     */
-    200: RunState;
-};
-
-export type RunStateResponse = RunStateResponses[keyof RunStateResponses];
-
 export type StartCurationData = {
     body: StartCuration;
     path?: never;
@@ -3936,6 +3567,31 @@ export type CurationPageResponses = {
 };
 
 export type CurationPageResponse = CurationPageResponses[keyof CurationPageResponses];
+
+export type NextCallData = {
+    body: NextCall;
+    path?: never;
+    query?: never;
+    url: '/api/v1/handoff/next';
+};
+
+export type NextCallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NextCallError = NextCallErrors[keyof NextCallErrors];
+
+export type NextCallResponses = {
+    /**
+     * Successful Response
+     */
+    200: Handed;
+};
+
+export type NextCallResponse = NextCallResponses[keyof NextCallResponses];
 
 export type GetHealthData = {
     body?: never;
@@ -4466,7 +4122,14 @@ export type DeleteMemoryData = {
          */
         path: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Reason
+         *
+         * Why it is saved, changed or removed, in one line; the commit message carries it.
+         */
+        reason?: string | null;
+    };
     url: '/api/v1/memory/memories/{path}';
 };
 
@@ -4726,7 +4389,7 @@ export type MigrationStartResponses = {
     /**
      * Successful Response
      */
-    200: TerminalSession;
+    200: MigrationStarted;
 };
 
 export type MigrationStartResponse = MigrationStartResponses[keyof MigrationStartResponses];
@@ -5335,260 +4998,3 @@ export type OpenReportResponses = {
 };
 
 export type OpenReportResponse = OpenReportResponses[keyof OpenReportResponses];
-
-export type ListTerminalAppsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/terminal/apps';
-};
-
-export type ListTerminalAppsResponses = {
-    /**
-     * Successful Response
-     */
-    200: TerminalApps;
-};
-
-export type ListTerminalAppsResponse = ListTerminalAppsResponses[keyof ListTerminalAppsResponses];
-
-export type BrowseFoldersData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Path
-         */
-        path?: string;
-        /**
-         * Hidden
-         */
-        hidden?: boolean;
-    };
-    url: '/api/v1/terminal/folders';
-};
-
-export type BrowseFoldersErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type BrowseFoldersError = BrowseFoldersErrors[keyof BrowseFoldersErrors];
-
-export type BrowseFoldersResponses = {
-    /**
-     * Successful Response
-     */
-    200: Folders;
-};
-
-export type BrowseFoldersResponse = BrowseFoldersResponses[keyof BrowseFoldersResponses];
-
-export type ForgetProjectData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Path
-         */
-        path: string;
-    };
-    url: '/api/v1/terminal/projects';
-};
-
-export type ForgetProjectErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ForgetProjectError = ForgetProjectErrors[keyof ForgetProjectErrors];
-
-export type ForgetProjectResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type ForgetProjectResponse = ForgetProjectResponses[keyof ForgetProjectResponses];
-
-export type ListProjectsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/terminal/projects';
-};
-
-export type ListProjectsResponses = {
-    /**
-     * Successful Response
-     */
-    200: Projects;
-};
-
-export type ListProjectsResponse = ListProjectsResponses[keyof ListProjectsResponses];
-
-export type ListTerminalsData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Persona
-         */
-        persona?: string | null;
-    };
-    url: '/api/v1/terminal/sessions';
-};
-
-export type ListTerminalsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListTerminalsError = ListTerminalsErrors[keyof ListTerminalsErrors];
-
-export type ListTerminalsResponses = {
-    /**
-     * Successful Response
-     */
-    200: TerminalSessions;
-};
-
-export type ListTerminalsResponse = ListTerminalsResponses[keyof ListTerminalsResponses];
-
-export type OpenTerminalData = {
-    body: NewTerminal;
-    path?: never;
-    query?: never;
-    url: '/api/v1/terminal/sessions';
-};
-
-export type OpenTerminalErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type OpenTerminalError = OpenTerminalErrors[keyof OpenTerminalErrors];
-
-export type OpenTerminalResponses = {
-    /**
-     * Successful Response
-     */
-    201: TerminalSession;
-};
-
-export type OpenTerminalResponse = OpenTerminalResponses[keyof OpenTerminalResponses];
-
-export type CloseTerminalData = {
-    body?: never;
-    path: {
-        /**
-         * Name
-         */
-        name: string;
-    };
-    query?: never;
-    url: '/api/v1/terminal/sessions/{name}';
-};
-
-export type CloseTerminalErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CloseTerminalError = CloseTerminalErrors[keyof CloseTerminalErrors];
-
-export type CloseTerminalResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type CloseTerminalResponse = CloseTerminalResponses[keyof CloseTerminalResponses];
-
-export type RenameTerminalData = {
-    body: RenameTerminal;
-    path: {
-        /**
-         * Name
-         */
-        name: string;
-    };
-    query?: never;
-    url: '/api/v1/terminal/sessions/{name}';
-};
-
-export type RenameTerminalErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RenameTerminalError = RenameTerminalErrors[keyof RenameTerminalErrors];
-
-export type RenameTerminalResponses = {
-    /**
-     * Successful Response
-     */
-    200: TerminalSession;
-};
-
-export type RenameTerminalResponse = RenameTerminalResponses[keyof RenameTerminalResponses];
-
-export type OpenNativelyData = {
-    body: OpenNative;
-    path: {
-        /**
-         * Name
-         */
-        name: string;
-    };
-    query?: never;
-    url: '/api/v1/terminal/sessions/{name}/open';
-};
-
-export type OpenNativelyErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type OpenNativelyError = OpenNativelyErrors[keyof OpenNativelyErrors];
-
-export type OpenNativelyResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type OpenNativelyResponse = OpenNativelyResponses[keyof OpenNativelyResponses];
-
-export type ListThemesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/terminal/themes';
-};
-
-export type ListThemesResponses = {
-    /**
-     * Successful Response
-     */
-    200: TerminalThemes;
-};
-
-export type ListThemesResponse = ListThemesResponses[keyof ListThemesResponses];

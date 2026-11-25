@@ -3,18 +3,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { MigratedGroup, MigrationGroup, MigrationPlanView, MigrationSent } from "@/client";
 import {
-  listTerminalsOptions,
   migrationPlanDecideMutation,
   migrationPlanGetOptions,
   migrationPlanListOptions,
   migrationStartMutation,
 } from "@/client/@tanstack/react-query.gen";
 import { ModuleBar, ModuleBarSection } from "@/components/shell/module-bar";
-import { ProjectPicker } from "@/components/terminal/project-picker";
+import { PasteLine } from "@/components/start-line";
 import { useTranslation } from "@/i18n";
 import { sectionTitle, usePageHeading } from "@/lib/breadcrumb";
 import { usePersona } from "@/lib/persona";
-import { usePreferences } from "@/lib/preferences";
 import "@/styles/migrate.css";
 import "@/styles/overview.css";
 
@@ -47,11 +45,9 @@ const short = (path: string) => path.replace(/^\/(Users|home)\/[^/]+/, "~");
 
 /** How often the page asks for the identity's plans, so the one the migration session saves shows up by itself. */
 const PLAN_POLL_MS = 3000;
-/** The label whaat gives the migration's terminal session; a question it asks takes the user there. */
-const MIGRATE_LABEL = "memory-migrate";
 
 /* The identity's page for bringing existing memory in: who the memory goes to is the subject of the page, the
-   user picks the groups and a loose folder's layer here, and Send types the import into the migration session. */
+   user picks the groups and a loose folder's layer here, and Send hands the import to the migration session. */
 function Migrate() {
   const { identity } = Route.useParams();
   const { plan: planId } = Route.useSearch();
@@ -66,13 +62,6 @@ function Migrate() {
   const plans =
     useQuery({ ...migrationPlanListOptions({ query: { identity } }), refetchInterval: PLAN_POLL_MS }).data ?? [];
   const latest = [...plans].sort((a, b) => b.id.localeCompare(a.id))[0];
-  const asking = useQuery({
-    ...listTerminalsOptions({ query: { persona: identity } }),
-    refetchInterval: PLAN_POLL_MS,
-  }).data?.sessions.find((s) => s.label === MIGRATE_LABEL && s.asking && !s.gone);
-  useEffect(() => {
-    if (asking) navigate({ to: "/terminal", search: { s: asking.name } });
-  }, [asking, navigate]);
   useEffect(() => {
     if (!planId && latest) {
       navigate({
@@ -150,47 +139,30 @@ function Profile({ identity, view, persona }: { identity: string; view?: Migrati
 
 function NoPlan({ identity, persona }: { identity: string; persona: string | null }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const start = useMutation({
-    ...migrationStartMutation(),
-    onSuccess: (session) => navigate({ to: "/terminal", search: { s: session.name } }),
-  });
-  const [picking, setPicking] = useState(false);
-  const config = usePreferences().preferences?.identity?.agents?.[identity];
+  const start = useMutation(migrationStartMutation());
   const detail = (start.error as { detail?: unknown } | null)?.detail;
-  if (picking) {
-    return (
-      <>
-        <Profile identity={identity} persona={persona} />
-        <p className="mg-pick">{t("migrate.pickFolder")}</p>
-        <div className="mg-picker">
-          <ProjectPicker
-            key={config ?? ""}
-            command="claude /whaat:memory-migrate"
-            start={config || undefined}
-            starting={start.isPending}
-            onStart={(cwd) => start.mutate({ body: { identity, cwd } })}
-            onCancel={() => setPicking(false)}
-          />
-        </div>
-        {start.isError && (
-          <p className="mg-warn">
-            {t("migrate.failed", { detail: typeof detail === "string" ? detail : String(start.error) })}
-          </p>
-        )}
-      </>
-    );
-  }
   return (
     <>
       <Profile identity={identity} persona={persona} />
       <div className="mg-empty">
         <h2>{t("migrate.noPlan")}</h2>
         <p>{t("migrate.noPlanNote")}</p>
-        <button type="button" className="mg-go" disabled={start.isPending} onClick={() => setPicking(true)}>
-          <span className="sh-av">{identity[0]?.toUpperCase()}</span>
-          {t("migrate.start")}
-        </button>
+        {start.data ? (
+          <div className="mg-cmd">
+            {t(start.data.waiting ? "migrate.lineWaiting" : "migrate.lineNote")}
+            <PasteLine line={start.data.command} />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="mg-go"
+            disabled={start.isPending}
+            onClick={() => start.mutate({ body: { identity } })}
+          >
+            <span className="sh-av">{identity[0]?.toUpperCase()}</span>
+            {t("migrate.start")}
+          </button>
+        )}
         {start.isError && (
           <p className="mg-warn">
             {t("migrate.failed", { detail: typeof detail === "string" ? detail : String(start.error) })}
@@ -209,7 +181,6 @@ function kindOf(group: MigrationGroup): "store" | "personal" | "auto" | "subagen
 
 function PlanPage({ identity, planId, persona }: { identity: string; planId: string; persona: string | null }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [sent, setSent] = useState<MigrationSent | null>(null);
   const query = useQuery({
     ...migrationPlanGetOptions({ path: { plan_id: planId }, query: { identity } }),
@@ -235,7 +206,6 @@ function PlanPage({ identity, planId, persona }: { identity: string; planId: str
     ...migrationPlanDecideMutation(),
     onSuccess: (result) => {
       setSent(result);
-      if (result.typed && result.session) navigate({ to: "/terminal", search: { s: result.session } });
     },
   });
   // a loose folder's group is named by its source and the layer the user gives it here
@@ -369,12 +339,12 @@ function PlanPage({ identity, planId, persona }: { identity: string; planId: str
         )}
         {sent && !done && (
           <div className="mg-cmd">
-            {sent.typed ? (
-              t("migrate.sent", { session: sent.session ?? "" })
+            {sent.handed ? (
+              t("migrate.sent")
             ) : (
               <>
                 {t("migrate.notSent", { detail: sent.detail ?? "", name: identity })}
-                <code>{sent.command}</code>
+                <PasteLine line={sent.command} />
               </>
             )}
           </div>

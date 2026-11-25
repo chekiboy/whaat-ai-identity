@@ -1,11 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { CurationReportBody, CurationRow, DecisionsSent, RowFigure } from "@/client";
 import {
   curationPageOptions,
-  listTerminalsOptions,
-  runStateOptions,
   sendDecisionsMutation,
   sendDoneMutation,
   sendRevertMutation,
@@ -14,13 +11,15 @@ import { Diagram } from "@/components/curation/diagram";
 import { inline, Markdown } from "@/components/curation/markdown";
 import { ACTIONS, MemoryMap } from "@/components/curation/memory-map";
 import { Panel } from "@/components/report-frame";
+import { PasteLine } from "@/components/start-line";
 import { useTranslation } from "@/i18n";
 import "@/styles/curation.css";
 
 /* The curation report page: the memory map, the
-   proposals as cards with their diagrams, the filter and selection toolbar, Send / Revert / Done into the curation
-   session. Two things are whaat's own: a row can be discarded, and the user's word per row is kept in
-   the report's JSON instead of side files. */
+   proposals as cards with their diagrams, the filter and selection toolbar, Send / Revert / Done handed to the
+   curation session that waits for this page (`whaat wait curation`), or shown to paste when none waits. Two things
+   are whaat's own: a row can be discarded, and the user's word per row is kept in the report's JSON instead of side
+   files. */
 
 const RISKY = new Set(["delete", "merge", "move"]);
 type Draft = { sel: number[]; disc: number[]; notes: Record<string, string> };
@@ -49,14 +48,8 @@ export function CurationReportView({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const storageKey = `whaat-curation:${reportId}`;
   const view = useQuery(curationPageOptions({ query: { report_id: reportId } }));
-  const terminals = useQuery({
-    ...listTerminalsOptions({ query: identity ? { persona: identity } : {} }),
-    enabled: Boolean(identity),
-  });
-  const session = terminals.data?.sessions.find((s) => s.label === "memory-curation" && !s.gone) ?? null;
 
   const [draft, setDraft] = useState<Draft>(() => loadDraft(storageKey));
   useEffect(() => {
@@ -151,10 +144,7 @@ export function CurationReportView({
     void queryClient.invalidateQueries();
   };
   const close = () => setModal(null);
-  const kicker = t("curation.modal.kicker", { session: session?.name ?? "—" });
-  const openSession = () => {
-    if (session) void navigate({ to: "/terminal", search: { s: session.name } });
-  };
+  const kicker = t("curation.modal.kicker", { identity: identity ?? "—" });
 
   const jump = (file: string) => {
     const row = [...others, ...fixRows].find((r) => figures.get(r.n)?.files.includes(file));
@@ -206,7 +196,7 @@ export function CurationReportView({
               notes: Object.fromEntries(Object.entries(d.notes).filter(([n]) => !sentNumbers.has(n))),
             }));
             refresh();
-            setModal(<SentModal result={result} applied={apply.length} onClose={close} onOpen={openSession} />);
+            setModal(<SentModal result={result} applied={apply.length} onClose={close} />);
           },
           onError: (error) => setError(errorText(error)),
         },
@@ -253,7 +243,7 @@ export function CurationReportView({
               onSuccess: (result) => {
                 refresh();
                 setModal(
-                  result.typed ? (
+                  result.handed ? (
                     <Modal title={t("curation.modal.sentTitle")} onClose={close}>
                       <p>{t("curation.modal.revertSentText", { call: result.command })}</p>
                       <div className="cur-actions">
@@ -263,7 +253,7 @@ export function CurationReportView({
                       </div>
                     </Modal>
                   ) : (
-                    <SentModal result={result} applied={1} onClose={close} onOpen={openSession} />
+                    <SentModal result={result} applied={1} onClose={close} />
                   ),
                 );
               },
@@ -292,12 +282,31 @@ export function CurationReportView({
         pending={done.isPending}
         onConfirm={(setError) =>
           done.mutate(
-            { body: { identity: identity ?? "" } },
+            { body: { report_id: reportId } },
             {
               onSuccess: (result) =>
-                result.typed
-                  ? setModal(<DoneModal identity={identity ?? ""} onClose={close} onOpen={openSession} />)
-                  : setError(result.detail ?? "not typed"),
+                setModal(
+                  result.handed ? (
+                    <Modal title={t("curation.modal.finishing")} onClose={close}>
+                      <p>{t("curation.modal.handedDone")}</p>
+                      <div className="cur-actions">
+                        <button type="button" onClick={close}>
+                          {t("curation.modal.close")}
+                        </button>
+                      </div>
+                    </Modal>
+                  ) : (
+                    <Modal title={t("curation.modal.notHandedTitle")} onClose={close}>
+                      <p>{t("curation.modal.doneNotHanded")}</p>
+                      <div className="cur-actions">
+                        <PasteLine line={result.command} />
+                        <button type="button" onClick={close}>
+                          {t("curation.modal.close")}
+                        </button>
+                      </div>
+                    </Modal>
+                  ),
+                ),
               onError: (error) => setError(errorText(error)),
             },
           )
@@ -503,11 +512,9 @@ export function CurationReportView({
             <button type="button" className="primary" onClick={send}>
               {t("curation.bar.send")}
             </button>
-            {session && (
-              <button type="button" title={t("curation.bar.doneTitle")} onClick={askDone}>
-                {t("curation.bar.done")}
-              </button>
-            )}
+            <button type="button" title={t("curation.bar.doneTitle")} onClick={askDone}>
+              {t("curation.bar.done")}
+            </button>
           </div>
         </div>
         <div className="cur-props">
@@ -634,29 +641,15 @@ function ConfirmModal({
   );
 }
 
-function SentModal({
-  result,
-  applied,
-  onClose,
-  onOpen,
-}: {
-  result: DecisionsSent;
-  applied: number;
-  onClose: () => void;
-  onOpen: () => void;
-}) {
+function SentModal({ result, applied, onClose }: { result: DecisionsSent; applied: number; onClose: () => void }) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-  if (result.typed)
+  if (result.handed)
     return (
       <Modal title={t("curation.modal.sentTitle")} onClose={onClose}>
         <p>{t("curation.modal.sentText", { call: result.command })}</p>
         <div className="cur-actions">
           <button type="button" onClick={onClose}>
             {t("curation.modal.close")}
-          </button>
-          <button type="button" onClick={onOpen}>
-            {t("curation.modal.openSession")}
           </button>
         </div>
       </Modal>
@@ -675,52 +668,10 @@ function SentModal({
   return (
     <Modal title={t("curation.modal.savedTitle")} onClose={onClose}>
       <p>{t("curation.modal.notTyped", { detail: result.detail ?? "" })}</p>
-      <pre>{result.command}</pre>
       <div className="cur-actions">
-        <button
-          type="button"
-          onClick={() =>
-            navigator.clipboard
-              .writeText(result.command)
-              .then(() => setCopied(true))
-              .catch(() => window.prompt("Copy:", result.command))
-          }
-        >
-          {copied ? t("curation.modal.copied") : t("curation.modal.copy")}
-        </button>
+        <PasteLine line={result.command} />
         <button type="button" onClick={onClose}>
           {t("curation.modal.close")}
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
-function DoneModal({ identity, onClose, onOpen }: { identity: string; onClose: () => void; onOpen: () => void }) {
-  const { t } = useTranslation();
-  const state = useQuery({
-    ...runStateOptions({ query: { identity } }),
-    refetchInterval: (query) => (query.state.data?.state === "exited" ? false : 3000),
-  });
-  // a failed poll counts as exited
-  const now = state.isError ? "exited" : (state.data?.state ?? "waiting");
-  const line =
-    now === "waiting"
-      ? t("curation.modal.waiting")
-      : now === "asked"
-        ? t("curation.modal.asked")
-        : now === "exited"
-          ? t("curation.modal.exited")
-          : now;
-  return (
-    <Modal title={now === "exited" ? t("curation.modal.ended") : t("curation.modal.finishing")} onClose={onClose}>
-      <p>{line}</p>
-      <div className="cur-actions">
-        <button type="button" onClick={onClose}>
-          {t("curation.modal.close")}
-        </button>
-        <button type="button" onClick={onOpen}>
-          {t("curation.modal.openSession")}
         </button>
       </div>
     </Modal>

@@ -31,7 +31,7 @@ function SessionsPage() {
   const navigate = useNavigate();
   usePageHeading(sectionTitle("Reports"), [
     { label: t("shell.reports"), to: "/reports" },
-    { label: t("terminal.sessions") },
+    { label: t("reports.sessions") },
   ]);
   const { data } = useQuery(listReportsOptions());
   const [filter, setFilter] = useState<Filter>("all");
@@ -69,7 +69,7 @@ function SessionsPage() {
     <div className="mem-list">
       <ReportsModuleBar />
       <div className="sh-tb mem-tb">
-        <h1>{t("terminal.sessions")}</h1>
+        <h1>{t("reports.sessions")}</h1>
         <span className="meta">
           {shown.length ? `${page * PAGE + 1}–${page * PAGE + part.length} / ${shown.length}` : "0"}
         </span>

@@ -30,8 +30,8 @@ Tools marked **only on request** change or remove memory in commits; the instruc
 
 | Tool | What it does |
 |---|---|
-| `memory_save` | Saves a memory and its index line as one commit |
-| `memory_delete` | Removes a wrong memory and its index line (only on request) |
+| `memory_save` | Saves a memory and its index line as one commit, with its `reason` in the commit message |
+| `memory_delete` | Removes a wrong memory and its index line (only on request), with its `reason` in the commit message |
 | `memory_reads` | Lists what a session opened |
 | `memory_record` | Records whether recalled memories held, misled or were irrelevant |
 

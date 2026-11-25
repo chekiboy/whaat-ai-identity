@@ -33,8 +33,8 @@ More: [Identities](identities.md), [MCP layer](mcp.md).
 | `whaat memory index task="…"` | The triggers that apply to the current repo |
 | `whaat memory open file=… because="…"` | Reads one memory and logs why |
 | `whaat memory dump dir=… purpose=… because="…"` | Reads a whole folder, to tidy, review or save |
-| `whaat memory save` | Saves a memory (JSON on stdin) and commits it |
-| `whaat memory delete <path>` | Removes a wrong memory and its index line |
+| `whaat memory save` | Saves a memory (JSON on stdin) and commits it, with the JSON's `reason` in the commit message |
+| `whaat memory delete <path> [--reason <why>]` | Removes a wrong memory and its index line |
 | `whaat memory reads` | What this session opened |
 | `whaat memory record <outcome> <paths>` | Records whether recalled memories held, misled or were irrelevant |
 | `whaat memory validity refresh` | Scores every memory |
@@ -56,6 +56,7 @@ More: [Memory](memory.md).
 | `whaat journal discarded` | Proposals you rejected earlier |
 | `whaat decisions save` | Saves a decisions page read from stdin and prints its address |
 | `whaat decisions wait` | Waits until you answer a decisions page, then prints your answer, one line per question |
+| `whaat wait curation --report <id>` / `whaat wait migration --plan <id>` | Waits until you act on that report's or plan's page, then prints the call whaat composed from it |
 
 More: [Curation](curation.md).
 

@@ -92,3 +92,8 @@ def test_open_report_refuses_an_unknown_report_and_says_when_no_browser_opens(cl
     refused = client.post(f"/api/v1/reports/{report['id']}/open", headers=AUTH)
     assert refused.status_code == 409
     assert "no browser" in refused.json()["detail"]
+
+
+def test_the_api_has_no_terminal_routes_any_more(client: TestClient) -> None:
+    paths = client.app.openapi()["paths"]  # type: ignore[attr-defined]
+    assert not [path for path in paths if path.startswith("/api/v1/terminal")]

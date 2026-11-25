@@ -3,15 +3,15 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { answerDecisions, browseFolders, browseMemories, closeTerminal, collectDecisions, createIdentity, curationPage, deleteMemory, discardedProposals, forgetProject, getHealth, getPreferences, getReport, getReportByKey, listIdentities, listProjects, listReports, listTerminalApps, listTerminals, listThemes, memoryAnalysis, memoryBrain, memoryCurationBrief, memoryCurationRefuteBrief, memoryFidelity, memoryGraph, memoryLint, memoryRings, memoryWhere, migrationGroups, migrationImport, migrationMovePersonal, migrationPlanCreate, migrationPlanDecide, migrationPlanGet, migrationPlanImport, migrationPlanList, migrationStart, openNatively, openReport, openTerminal, type Options, outcomeRead, outcomeReads, outcomeRecord, recallDump, recallFrame, recallGuard, recallIndex, recallOpen, recallSeen, recallStart, recallSubagentCore, regenerateToken, renameTerminal, restartServer, revertMemory, runState, saveCurationApplied, saveCurationReport, saveDecisions, saveJournalEntry, saveMemory, saveSessionReport, sendDecisions, sendDone, sendRevert, startCuration, stopServer, updatePreferences, validityLevel, validityRefresh } from '../sdk.gen';
-import type { AnswerDecisionsData, AnswerDecisionsError, AnswerDecisionsResponse, BrowseFoldersData, BrowseFoldersError, BrowseFoldersResponse, BrowseMemoriesData, BrowseMemoriesResponse, CloseTerminalData, CloseTerminalError, CloseTerminalResponse, CollectDecisionsData, CollectDecisionsError, CollectDecisionsResponse, CreateIdentityData, CreateIdentityError, CreateIdentityResponse, CurationPageData, CurationPageError, CurationPageResponse, DeleteMemoryData, DeleteMemoryError, DeleteMemoryResponse, DiscardedProposalsData, DiscardedProposalsResponse, ForgetProjectData, ForgetProjectError, ForgetProjectResponse, GetHealthData, GetHealthResponse, GetPreferencesData, GetPreferencesResponse, GetReportByKeyData, GetReportByKeyError, GetReportByKeyResponse, GetReportData, GetReportError, GetReportResponse, ListIdentitiesData, ListIdentitiesResponse, ListProjectsData, ListProjectsResponse, ListReportsData, ListReportsError, ListReportsResponse, ListTerminalAppsData, ListTerminalAppsResponse, ListTerminalsData, ListTerminalsError, ListTerminalsResponse, ListThemesData, ListThemesResponse, MemoryAnalysisData, MemoryAnalysisError, MemoryAnalysisResponse, MemoryBrainData, MemoryBrainError, MemoryBrainResponse, MemoryCurationBriefData, MemoryCurationBriefError, MemoryCurationBriefResponse, MemoryCurationRefuteBriefData, MemoryCurationRefuteBriefError, MemoryCurationRefuteBriefResponse, MemoryFidelityData, MemoryFidelityError, MemoryFidelityResponse, MemoryGraphData, MemoryGraphError, MemoryGraphResponse, MemoryLintData, MemoryLintError, MemoryLintResponse, MemoryRingsData, MemoryRingsError, MemoryRingsResponse, MemoryWhereData, MemoryWhereError, MemoryWhereResponse, MigrationGroupsData, MigrationGroupsError, MigrationGroupsResponse, MigrationImportData, MigrationImportError, MigrationImportResponse, MigrationMovePersonalData, MigrationMovePersonalResponse, MigrationPlanCreateData, MigrationPlanCreateError, MigrationPlanCreateResponse, MigrationPlanDecideData, MigrationPlanDecideError, MigrationPlanDecideResponse, MigrationPlanGetData, MigrationPlanGetError, MigrationPlanGetResponse, MigrationPlanImportData, MigrationPlanImportError, MigrationPlanImportResponse, MigrationPlanListData, MigrationPlanListError, MigrationPlanListResponse, MigrationStartData, MigrationStartError, MigrationStartResponse, OpenNativelyData, OpenNativelyError, OpenNativelyResponse, OpenReportData, OpenReportError, OpenReportResponse, OpenTerminalData, OpenTerminalError, OpenTerminalResponse, OutcomeReadData, OutcomeReadError, OutcomeReadResponse, OutcomeReadsData, OutcomeReadsError, OutcomeReadsResponse, OutcomeRecordData, OutcomeRecordError, OutcomeRecordResponse, RecallDumpData, RecallDumpError, RecallDumpResponse, RecallFrameData, RecallFrameError, RecallFrameResponse, RecallGuardData, RecallGuardError, RecallGuardResponse, RecallIndexData, RecallIndexError, RecallIndexResponse, RecallOpenData, RecallOpenError, RecallOpenResponse, RecallSeenData, RecallSeenError, RecallSeenResponse, RecallStartData, RecallStartError, RecallStartResponse, RecallSubagentCoreData, RecallSubagentCoreResponse, RegenerateTokenData, RegenerateTokenError, RegenerateTokenResponse, RenameTerminalData, RenameTerminalError, RenameTerminalResponse, RestartServerData, RestartServerResponse, RevertMemoryData, RevertMemoryError, RevertMemoryResponse, RunStateData, RunStateError, RunStateResponse, SaveCurationAppliedData, SaveCurationAppliedError, SaveCurationAppliedResponse, SaveCurationReportData, SaveCurationReportError, SaveCurationReportResponse, SaveDecisionsData, SaveDecisionsError, SaveDecisionsResponse, SaveJournalEntryData, SaveJournalEntryError, SaveJournalEntryResponse, SaveMemoryData, SaveMemoryError, SaveMemoryResponse, SaveSessionReportData, SaveSessionReportError, SaveSessionReportResponse, SendDecisionsData, SendDecisionsError, SendDecisionsResponse, SendDoneData, SendDoneError, SendDoneResponse, SendRevertData, SendRevertError, SendRevertResponse, StartCurationData, StartCurationError, StartCurationResponse, StopServerData, UpdatePreferencesData, UpdatePreferencesError, UpdatePreferencesResponse, ValidityLevelData, ValidityLevelError, ValidityLevelResponse, ValidityRefreshData, ValidityRefreshResponse } from '../types.gen';
+import { answerDecisions, browseMemories, collectDecisions, createIdentity, curationPage, deleteMemory, discardedProposals, getHealth, getPreferences, getReport, getReportByKey, listIdentities, listReports, memoryAnalysis, memoryBrain, memoryCurationBrief, memoryCurationRefuteBrief, memoryFidelity, memoryGraph, memoryLint, memoryRings, memoryWhere, migrationGroups, migrationImport, migrationMovePersonal, migrationPlanCreate, migrationPlanDecide, migrationPlanGet, migrationPlanImport, migrationPlanList, migrationStart, nextCall, openReport, type Options, outcomeRead, outcomeReads, outcomeRecord, recallDump, recallFrame, recallGuard, recallIndex, recallOpen, recallSeen, recallStart, recallSubagentCore, regenerateToken, restartServer, revertMemory, saveCurationApplied, saveCurationReport, saveDecisions, saveJournalEntry, saveMemory, saveSessionReport, sendDecisions, sendDone, sendRevert, startCuration, stopServer, updatePreferences, validityLevel, validityRefresh } from '../sdk.gen';
+import type { AnswerDecisionsData, AnswerDecisionsError, AnswerDecisionsResponse, BrowseMemoriesData, BrowseMemoriesResponse, CollectDecisionsData, CollectDecisionsError, CollectDecisionsResponse, CreateIdentityData, CreateIdentityError, CreateIdentityResponse, CurationPageData, CurationPageError, CurationPageResponse, DeleteMemoryData, DeleteMemoryError, DeleteMemoryResponse, DiscardedProposalsData, DiscardedProposalsResponse, GetHealthData, GetHealthResponse, GetPreferencesData, GetPreferencesResponse, GetReportByKeyData, GetReportByKeyError, GetReportByKeyResponse, GetReportData, GetReportError, GetReportResponse, ListIdentitiesData, ListIdentitiesResponse, ListReportsData, ListReportsError, ListReportsResponse, MemoryAnalysisData, MemoryAnalysisError, MemoryAnalysisResponse, MemoryBrainData, MemoryBrainError, MemoryBrainResponse, MemoryCurationBriefData, MemoryCurationBriefError, MemoryCurationBriefResponse, MemoryCurationRefuteBriefData, MemoryCurationRefuteBriefError, MemoryCurationRefuteBriefResponse, MemoryFidelityData, MemoryFidelityError, MemoryFidelityResponse, MemoryGraphData, MemoryGraphError, MemoryGraphResponse, MemoryLintData, MemoryLintError, MemoryLintResponse, MemoryRingsData, MemoryRingsError, MemoryRingsResponse, MemoryWhereData, MemoryWhereError, MemoryWhereResponse, MigrationGroupsData, MigrationGroupsError, MigrationGroupsResponse, MigrationImportData, MigrationImportError, MigrationImportResponse, MigrationMovePersonalData, MigrationMovePersonalResponse, MigrationPlanCreateData, MigrationPlanCreateError, MigrationPlanCreateResponse, MigrationPlanDecideData, MigrationPlanDecideError, MigrationPlanDecideResponse, MigrationPlanGetData, MigrationPlanGetError, MigrationPlanGetResponse, MigrationPlanImportData, MigrationPlanImportError, MigrationPlanImportResponse, MigrationPlanListData, MigrationPlanListError, MigrationPlanListResponse, MigrationStartData, MigrationStartError, MigrationStartResponse, NextCallData, NextCallError, NextCallResponse, OpenReportData, OpenReportError, OpenReportResponse, OutcomeReadData, OutcomeReadError, OutcomeReadResponse, OutcomeReadsData, OutcomeReadsError, OutcomeReadsResponse, OutcomeRecordData, OutcomeRecordError, OutcomeRecordResponse, RecallDumpData, RecallDumpError, RecallDumpResponse, RecallFrameData, RecallFrameError, RecallFrameResponse, RecallGuardData, RecallGuardError, RecallGuardResponse, RecallIndexData, RecallIndexError, RecallIndexResponse, RecallOpenData, RecallOpenError, RecallOpenResponse, RecallSeenData, RecallSeenError, RecallSeenResponse, RecallStartData, RecallStartError, RecallStartResponse, RecallSubagentCoreData, RecallSubagentCoreResponse, RegenerateTokenData, RegenerateTokenError, RegenerateTokenResponse, RestartServerData, RestartServerResponse, RevertMemoryData, RevertMemoryError, RevertMemoryResponse, SaveCurationAppliedData, SaveCurationAppliedError, SaveCurationAppliedResponse, SaveCurationReportData, SaveCurationReportError, SaveCurationReportResponse, SaveDecisionsData, SaveDecisionsError, SaveDecisionsResponse, SaveJournalEntryData, SaveJournalEntryError, SaveJournalEntryResponse, SaveMemoryData, SaveMemoryError, SaveMemoryResponse, SaveSessionReportData, SaveSessionReportError, SaveSessionReportResponse, SendDecisionsData, SendDecisionsError, SendDecisionsResponse, SendDoneData, SendDoneError, SendDoneResponse, SendRevertData, SendRevertError, SendRevertResponse, StartCurationData, StartCurationError, StartCurationResponse, StopServerData, UpdatePreferencesData, UpdatePreferencesError, UpdatePreferencesResponse, ValidityLevelData, ValidityLevelError, ValidityLevelResponse, ValidityRefreshData, ValidityRefreshResponse } from '../types.gen';
 
 /**
  * Send Decisions
  *
- * Save the user's word per row into the report, then type the apply call into the identity's running curation
+ * Save the user's word per row into the report, then hand the apply call to the identity's waiting curation
  * session and stamp the applied rows as sent; a row already sent (and not reverted since) is refused. When no
- * session runs, the answer carries the call to paste.
+ * session waits, the answer carries the call to paste.
  */
 export const sendDecisionsMutation = (options?: Partial<Options<SendDecisionsData>>): UseMutationOptions<SendDecisionsResponse, SendDecisionsError, Options<SendDecisionsData>> => {
     const mutationOptions: UseMutationOptions<SendDecisionsResponse, SendDecisionsError, Options<SendDecisionsData>> = {
@@ -84,8 +84,8 @@ export const discardedProposalsOptions = (options?: Options<DiscardedProposalsDa
 /**
  * Send Done
  *
- * Done on the page: the session-end call with no steps; a watcher then waits for the closing line and types
- * /exit. Its state is read from /run-state.
+ * Done on the page: hand the session-end call with no steps to the curation session waiting for this report,
+ * which ends the curation; its terminal is the user's to close.
  */
 export const sendDoneMutation = (options?: Partial<Options<SendDoneData>>): UseMutationOptions<SendDoneResponse, SendDoneError, Options<SendDoneData>> => {
     const mutationOptions: UseMutationOptions<SendDoneResponse, SendDoneError, Options<SendDoneData>> = {
@@ -104,7 +104,7 @@ export const sendDoneMutation = (options?: Partial<Options<SendDoneData>>): UseM
 /**
  * Send Revert
  *
- * Type revert-applied-rows for one applied row into the curation session; the row counts as not sent again.
+ * Hand revert-applied-rows for one applied row to the waiting curation session; the row counts as unsent again.
  */
 export const sendRevertMutation = (options?: Partial<Options<SendRevertData>>): UseMutationOptions<SendRevertResponse, SendRevertError, Options<SendRevertData>> => {
     const mutationOptions: UseMutationOptions<SendRevertResponse, SendRevertError, Options<SendRevertData>> = {
@@ -120,31 +120,11 @@ export const sendRevertMutation = (options?: Partial<Options<SendRevertData>>): 
     return mutationOptions;
 };
 
-export const runStateQueryKey = (options: Options<RunStateData>) => createQueryKey('runState', options);
-
-/**
- * Run State
- *
- * waiting, asked, exited after Done; open when Done was not sent.
- */
-export const runStateOptions = (options: Options<RunStateData>) => queryOptions<RunStateResponse, RunStateError, RunStateResponse, ReturnType<typeof runStateQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await runState({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: runStateQueryKey(options)
-});
-
 /**
  * Start Curation
  *
- * Start memory-curation's report in a terminal session of the identity, with its own agent config; a curation
- * session already running for it is returned instead of a second one.
+ * The line that starts memory-curation's report as this identity, with its own agent config, for the user to
+ * paste into a terminal.
  */
 export const startCurationMutation = (options?: Partial<Options<StartCurationData>>): UseMutationOptions<StartCurationResponse, StartCurationError, Options<StartCurationData>> => {
     const mutationOptions: UseMutationOptions<StartCurationResponse, StartCurationError, Options<StartCurationData>> = {
@@ -180,6 +160,26 @@ export const curationPageOptions = (options: Options<CurationPageData>) => query
     },
     queryKey: curationPageQueryKey(options)
 });
+
+/**
+ * Next Call
+ *
+ * The next call for this identity's session waiting for this work, taken as it is given. An ask that gets
+ * nothing marks the session as waiting, so the page hands its next click over instead of showing the call.
+ */
+export const nextCallMutation = (options?: Partial<Options<NextCallData>>): UseMutationOptions<NextCallResponse, NextCallError, Options<NextCallData>> => {
+    const mutationOptions: UseMutationOptions<NextCallResponse, NextCallError, Options<NextCallData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await nextCall({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getHealthQueryKey = (options?: Options<GetHealthData>) => createQueryKey('getHealth', options);
 
@@ -223,7 +223,7 @@ export const restartServerMutation = (options?: Partial<Options<RestartServerDat
  * Stop Server
  *
  * Stop the server a moment after this answer, as Ctrl-C would; it starts again only from outside (the app or
- * `whaat serve`). Terminal sessions keep running in tmux.
+ * `whaat serve`).
  */
 export const stopServerMutation = (options?: Partial<Options<StopServerData>>): UseMutationOptions<unknown, DefaultError, Options<StopServerData>> => {
     const mutationOptions: UseMutationOptions<unknown, DefaultError, Options<StopServerData>> = {
@@ -734,8 +734,8 @@ export const migrationPlanGetOptions = (options: Options<MigrationPlanGetData>) 
 /**
  * Migration Plan Decide
  *
- * Save the user's choice from the page into the plan, then type the import call into the identity's running
- * migration session; without one, the answer carries the call to paste.
+ * Save the user's choice from the page into the plan, then hand the import call to the identity's migration
+ * session waiting through `whaat wait migration`; without one, the answer carries the call to paste.
  */
 export const migrationPlanDecideMutation = (options?: Partial<Options<MigrationPlanDecideData>>): UseMutationOptions<MigrationPlanDecideResponse, MigrationPlanDecideError, Options<MigrationPlanDecideData>> => {
     const mutationOptions: UseMutationOptions<MigrationPlanDecideResponse, MigrationPlanDecideError, Options<MigrationPlanDecideData>> = {
@@ -773,8 +773,8 @@ export const migrationPlanImportMutation = (options?: Partial<Options<MigrationP
 /**
  * Migration Start
  *
- * Start the migration skill in a terminal session of the identity, with its own agent config, in the folder
- * given or else in that agent config's folder, never the home folder; one already running is returned instead.
+ * The line that starts the migration skill as this identity, for the user to paste into a terminal: in the folder
+ * given or else in its agent config's folder, never the home folder.
  */
 export const migrationStartMutation = (options?: Partial<Options<MigrationStartData>>): UseMutationOptions<MigrationStartResponse, MigrationStartError, Options<MigrationStartData>> => {
     const mutationOptions: UseMutationOptions<MigrationStartResponse, MigrationStartError, Options<MigrationStartData>> = {
@@ -831,7 +831,9 @@ export const outcomeReadsMutation = (options?: Partial<Options<OutcomeReadsData>
 /**
  * Outcome Record
  *
- * memory-outcome record: held, misled or irrelevant per memory; held rescores at once.
+ * memory-outcome record: held, misled or irrelevant per memory the session read or recalled; rescores at once.
+ * When a codebase fact or recipe without a `source` holds, it gets `source: measured` and today's `confirmed`,
+ * unless it misled since its last change.
  */
 export const outcomeRecordMutation = (options?: Partial<Options<OutcomeRecordData>>): UseMutationOptions<OutcomeRecordResponse, OutcomeRecordError, Options<OutcomeRecordData>> => {
     const mutationOptions: UseMutationOptions<OutcomeRecordResponse, OutcomeRecordError, Options<OutcomeRecordData>> = {
@@ -1106,8 +1108,8 @@ export const getPreferencesQueryKey = (options?: Options<GetPreferencesData>) =>
 /**
  * Get Preferences
  *
- * What the UI remembers: the language, the identity it opens with and the one used last, and the terminal's default
- * command, theme and saved folders.
+ * What the UI remembers: the language, the identity it opens with and the one used last, and each identity's
+ * agent config folder.
  */
 export const getPreferencesOptions = (options?: Options<GetPreferencesData>) => queryOptions<GetPreferencesResponse, DefaultError, GetPreferencesResponse, ReturnType<typeof getPreferencesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -1125,7 +1127,7 @@ export const getPreferencesOptions = (options?: Options<GetPreferencesData>) => 
 /**
  * Update Preferences
  *
- * Change what is given and keep the rest; an empty command goes back to the default.
+ * Change what is given and keep the rest.
  */
 export const updatePreferencesMutation = (options?: Partial<Options<UpdatePreferencesData>>): UseMutationOptions<UpdatePreferencesResponse, UpdatePreferencesError, Options<UpdatePreferencesData>> => {
     const mutationOptions: UseMutationOptions<UpdatePreferencesResponse, UpdatePreferencesError, Options<UpdatePreferencesData>> = {
@@ -1232,199 +1234,3 @@ export const openReportMutation = (options?: Partial<Options<OpenReportData>>): 
     };
     return mutationOptions;
 };
-
-export const listTerminalAppsQueryKey = (options?: Options<ListTerminalAppsData>) => createQueryKey('listTerminalApps', options);
-
-/**
- * List Terminal Apps
- *
- * The terminal apps of this machine a session can open in, besides the browser.
- */
-export const listTerminalAppsOptions = (options?: Options<ListTerminalAppsData>) => queryOptions<ListTerminalAppsResponse, DefaultError, ListTerminalAppsResponse, ReturnType<typeof listTerminalAppsQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await listTerminalApps({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: listTerminalAppsQueryKey(options)
-});
-
-export const browseFoldersQueryKey = (options?: Options<BrowseFoldersData>) => createQueryKey('browseFolders', options);
-
-/**
- * Browse Folders
- *
- * The folders under a folder, for picking the project a session starts in.
- */
-export const browseFoldersOptions = (options?: Options<BrowseFoldersData>) => queryOptions<BrowseFoldersResponse, BrowseFoldersError, BrowseFoldersResponse, ReturnType<typeof browseFoldersQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await browseFolders({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: browseFoldersQueryKey(options)
-});
-
-/**
- * Forget Project
- *
- * Take a project off the saved list; the folder itself stays.
- */
-export const forgetProjectMutation = (options?: Partial<Options<ForgetProjectData>>): UseMutationOptions<ForgetProjectResponse, ForgetProjectError, Options<ForgetProjectData>> => {
-    const mutationOptions: UseMutationOptions<ForgetProjectResponse, ForgetProjectError, Options<ForgetProjectData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await forgetProject({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-export const listProjectsQueryKey = (options?: Options<ListProjectsData>) => createQueryKey('listProjects', options);
-
-/**
- * List Projects
- *
- * The project folders sessions were started in, the one used last first.
- */
-export const listProjectsOptions = (options?: Options<ListProjectsData>) => queryOptions<ListProjectsResponse, DefaultError, ListProjectsResponse, ReturnType<typeof listProjectsQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await listProjects({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: listProjectsQueryKey(options)
-});
-
-export const listTerminalsQueryKey = (options?: Options<ListTerminalsData>) => createQueryKey('listTerminals', options);
-
-/**
- * List Terminals
- *
- * The running terminal sessions, of one persona or of all.
- */
-export const listTerminalsOptions = (options?: Options<ListTerminalsData>) => queryOptions<ListTerminalsResponse, ListTerminalsError, ListTerminalsResponse, ReturnType<typeof listTerminalsQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await listTerminals({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: listTerminalsQueryKey(options)
-});
-
-/**
- * Open Terminal
- *
- * Start a new session for a persona: the start command in the user's login shell, in its own tmux session.
- */
-export const openTerminalMutation = (options?: Partial<Options<OpenTerminalData>>): UseMutationOptions<OpenTerminalResponse, OpenTerminalError, Options<OpenTerminalData>> => {
-    const mutationOptions: UseMutationOptions<OpenTerminalResponse, OpenTerminalError, Options<OpenTerminalData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await openTerminal({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * Close Terminal
- *
- * Stop a session and what runs in it, and forget it; a gone one is only forgotten. Closing its window does not
- * do this.
- */
-export const closeTerminalMutation = (options?: Partial<Options<CloseTerminalData>>): UseMutationOptions<CloseTerminalResponse, CloseTerminalError, Options<CloseTerminalData>> => {
-    const mutationOptions: UseMutationOptions<CloseTerminalResponse, CloseTerminalError, Options<CloseTerminalData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await closeTerminal({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * Rename Terminal
- *
- * Name a session, so the list shows what runs in it.
- */
-export const renameTerminalMutation = (options?: Partial<Options<RenameTerminalData>>): UseMutationOptions<RenameTerminalResponse, RenameTerminalError, Options<RenameTerminalData>> => {
-    const mutationOptions: UseMutationOptions<RenameTerminalResponse, RenameTerminalError, Options<RenameTerminalData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await renameTerminal({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * Open Natively
- *
- * Open a running session in a terminal app of this machine, attached to the same tmux session.
- */
-export const openNativelyMutation = (options?: Partial<Options<OpenNativelyData>>): UseMutationOptions<OpenNativelyResponse, OpenNativelyError, Options<OpenNativelyData>> => {
-    const mutationOptions: UseMutationOptions<OpenNativelyResponse, OpenNativelyError, Options<OpenNativelyData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await openNatively({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-export const listThemesQueryKey = (options?: Options<ListThemesData>) => createQueryKey('listThemes', options);
-
-/**
- * List Themes
- *
- * The terminal themes this machine has (macOS Terminal's and iTerm2's profiles), read when asked.
- */
-export const listThemesOptions = (options?: Options<ListThemesData>) => queryOptions<ListThemesResponse, DefaultError, ListThemesResponse, ReturnType<typeof listThemesQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await listThemes({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: listThemesQueryKey(options)
-});

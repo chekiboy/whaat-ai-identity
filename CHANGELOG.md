@@ -2,6 +2,41 @@
 
 What changed in each version of whaat. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Until 1.0, a new minor version (0.2, 0.3) may change the API, the CLI or the file formats.
 
+## 0.5.0 (2026-11-25)
+
+### Added
+
+- **`whaat state-dir`** prints the instance's state folder, where the admin token is, so a tool outside the server need not know the rule.
+- **`whaat open` and `whaat app` print the address** when no browser can be started, so it can be opened by hand.
+- **Each memory commit can say why.** A save takes a one-line `reason` (in the JSON, or `reason` in the MCP tool), and a delete takes `--reason`; it is appended to the commit message as `memory: update <path> — <reason>`, so the history shows why a memory changed. The memory, curation and migration skills give one with every change.
+- **Linux, and WSL2 on Windows (WSL2 not tried yet).** Whaat reads which system it runs on in one place (`platform/system.py`) and acts on it: the state folder is the XDG data folder on Linux and WSL (`$XDG_DATA_HOME/whaat`, else `~/.local/share/whaat`), links open with `xdg-open`, or in the Windows browser through `wslview` on WSL, and `MEMORY_REPO_ROOTS` is split with the system's path separator. `WHAAT_STATE_DIR` still wins. Tested in a Debian container with no Mac files in it, where these worked: the server's tests, a server start, `whaat connect`, the app in its own window on a virtual screen, links through `xdg-open`, and four real Claude Code sessions that saved and recalled memories and recorded whether they held, through the plugin's hooks. Not tried on a Linux desktop or on WSL2. A new state folder is created private (mode 700); an existing one keeps its mode. macOS installs keep their state folder.
+- **Native Windows groundwork, not tried on Windows yet.** The PowerShell start line stops when its folder is missing and puts `CLAUDE_CONFIG_DIR` back when claude ends (run in real PowerShell); the plugin's hooks run through uv in exec form, so they need neither a shell nor a `python3` name; the hook starts the server through uv rather than the bash launcher; token files are written without `os.fchmod`, which Windows lacks before Python 3.13; processes are detached with Windows' creation flags; the server's port is held with `SO_EXCLUSIVEADDRUSE`; a `C:\` origin counts as a local folder. The skills still call the bash launcher, so on Windows they need Git for Windows, which Claude Code's Bash tool needs too.
+- **A `whaat` command that can neither reach nor start the server** (inside Claude Code's sandbox, for example) says so and names the port and the state folder to allow, instead of a traceback; a start that times out names them too.
+- **The plugin's hooks need Claude Code 2.1.139 or newer**, which runs exec-form hooks.
+
+### Removed
+
+- **The experimental terminal**, with everything that existed only for it: the Terminal page and its menu item, tmux sessions, opening a session in Terminal or iTerm2, the machine's terminal themes, the saved project folders, and the terminal part of Settings (start command, where sessions open, colour theme). The server no longer needs tmux, and the UI no longer ships xterm. Curation and migration start from a line you paste into a terminal of your own (below).
+- **API.** The `/api/v1/terminal/*` routes, and the `terminal` part of the preferences; an older preferences file loses it on its next save.
+- **Configuration.** `WHAAT_TERMINAL_COMMAND` and `WHAAT_TERMINAL_CWD`.
+- **Left behind by an earlier version.** Its terminal sessions keep running on their own tmux server until you stop them with `tmux -L whaat-<instance> kill-server` (`whaat-live` for the default instance), and `<state dir>/terminal/` can be deleted.
+
+### Changed
+
+- **Validity: a use after a long silence earns a week.** A `held` outcome still restarts a memory's clock when the memory was confirmed, added or held within the last 30 days; after a longer silence it winds the clock back one week only, so one use after months no longer makes an old memory certain again.
+- **Validity: an unset source weighs 0.8 for a codebase's fact or recipe** (a `project` or `reference` memory in a repo folder), which the code can outdate; other memories without a source keep 0.9. When such a memory holds, whaat gives it `source: measured` and today's `confirmed` in a commit of its own, since a use that held has checked it against the code; one that misled since its last change is left for a fix. Expect some memories to drop a level on the first refresh after the upgrade.
+- **An outcome needs a read.** `whaat memory record` skips a memory the session neither read nor recalled (an open to save, curate or review does not count, nor a Read after one), counts each session once per outcome, and rescores after any outcome, not only `held`.
+- **Curation and migration no longer run in the app's terminal.** **Start curation** and the migration's start button show a line to paste into a terminal of your own; it starts the agent as the identity, in PowerShell syntax on Windows. The session then waits for the page of its own report or plan in the background (`whaat wait curation --report <id>`, `whaat wait migration --plan <id>`), and each click on that page reaches it through whaat instead of being typed into a tmux session. A call waits on disk until the session takes it, so a server restart in between loses nothing; one no session took within 10 minutes is dropped, never run later. When no session waits for that report or plan, the page shows the call to paste, as before.
+- **The migration's folder picker is gone** with the terminal. The line starts in the identity's Claude Code config folder, as the picker did by default; change the folder in the line before pasting it to start elsewhere.
+- **API.** `POST /api/v1/curation/start` and `POST /api/v1/memory/migration/start` return the line to paste (`command`) and whether a session already waits (`waiting`) instead of a terminal session. The curation and migration answers say `handed` instead of `typed` and no longer name a session. `POST /api/v1/curation/done` takes the `report_id` instead of the identity. New: `POST /api/v1/handoff/next` (`kind` and `work`, the report or plan id), which the waiting session asks with the identity's token. Removed: `GET /api/v1/curation/run-state`.
+- The migrate skill no longer ends its turns with `[whaat] waiting for your answer` or `[whaat] done`: the page no longer follows the session's screen.
+- The README's opening says why Whaat suits a coding agent's memory.
+- Bumped the project version to 0.5.0.
+
+### Fixed
+
+- **Saving works on a machine with no git user.** When git cannot work out an author (no `user.name` or `user.email` on a fresh machine, in a container or in CI), whaat fills in only the missing part with `whaat` / `whaat@localhost` instead of failing, so a new identity and its memory are versioned from the first save. Where git can work out an author itself, nothing changes.
+
 ## 0.4.0 (2026-11-20)
 
 ### Added

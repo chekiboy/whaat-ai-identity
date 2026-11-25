@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as ReportsIndexRouteImport } from './routes/reports.index'
 import { Route as ReportsKeyRouteImport } from './routes/reports.$key'
 import { Route as ReportsSessionsRouteImport } from './routes/reports.sessions'
@@ -37,11 +36,6 @@ const MemoryRoute = MemoryRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TerminalRoute = TerminalRouteImport.update({
-  id: '/terminal',
-  path: '/terminal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsIndexRoute = ReportsIndexRouteImport.update({
@@ -71,7 +65,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
-  '/terminal': typeof TerminalRoute
   '/reports/$key': typeof ReportsKeyRoute
   '/reports/sessions': typeof ReportsSessionsRoute
   '/reports/': typeof ReportsIndexRoute
@@ -82,7 +75,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
-  '/terminal': typeof TerminalRoute
   '/reports/$key': typeof ReportsKeyRoute
   '/reports/sessions': typeof ReportsSessionsRoute
   '/reports': typeof ReportsIndexRoute
@@ -94,7 +86,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
-  '/terminal': typeof TerminalRoute
   '/reports/$key': typeof ReportsKeyRoute
   '/reports/sessions': typeof ReportsSessionsRoute
   '/reports/': typeof ReportsIndexRoute
@@ -107,7 +98,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/memory'
     | '/settings'
-    | '/terminal'
     | '/reports/$key'
     | '/reports/sessions'
     | '/reports/'
@@ -118,7 +108,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/memory'
     | '/settings'
-    | '/terminal'
     | '/reports/$key'
     | '/reports/sessions'
     | '/reports'
@@ -129,7 +118,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/memory'
     | '/settings'
-    | '/terminal'
     | '/reports/$key'
     | '/reports/sessions'
     | '/reports/'
@@ -141,7 +129,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   MemoryRoute: typeof MemoryRoute
   SettingsRoute: typeof SettingsRoute
-  TerminalRoute: typeof TerminalRoute
   ReportsKeyRoute: typeof ReportsKeyRoute
   ReportsSessionsRoute: typeof ReportsSessionsRoute
   ReportsIndexRoute: typeof ReportsIndexRoute
@@ -176,13 +163,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terminal': {
-      id: '/terminal'
-      path: '/terminal'
-      fullPath: '/terminal'
-      preLoaderRoute: typeof TerminalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports/': {
@@ -221,7 +201,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   MemoryRoute: MemoryRoute,
   SettingsRoute: SettingsRoute,
-  TerminalRoute: TerminalRoute,
   ReportsKeyRoute: ReportsKeyRoute,
   ReportsSessionsRoute: ReportsSessionsRoute,
   ReportsIndexRoute: ReportsIndexRoute,

@@ -70,8 +70,11 @@ files. On a no, stop before the import and say so: until the move, the import re
 The choice is made on the identity's page, not here: give the `url` and say in one message
 what the plan holds, group by group with its counts, the conflicts by name, and the target you propose for each loose
 folder. The page shows whose memory it fills; the user picks the groups, may change a loose folder's layer,
-and sends. If whaat started this session, Send types `/whaat:memory-migrate import plan=<id>` here; otherwise the
-user pastes it. Import nothing before that call comes.
+and sends. Then run `whaat wait migration --plan <id>`
+(`${CLAUDE_SKILL_DIR}/../../scripts/whaat wait migration --plan <id>`) with `run_in_background` and end the turn: when the user sends, it prints `/whaat:memory-migrate import plan=<id>`, which
+whaat composed from the page; run it as if the user had typed it. Without a waiting session the page shows that call
+for the user to paste. Import nothing before that call comes. If the user writes in chat instead, the chat counts:
+stop the wait first.
 
 In the same message, propose what the import will not bring: a dropped line that points at a file or folder outside
 memory (a todo list, a roadmap, an idea box) is a pointer the import loses, and an archive beside the personal source
@@ -101,7 +104,7 @@ A memory in the wrong layer moves. A whole loose group whose files no later comm
 import commit, then `whaat memory import` with the same source and the new target on stdin
 (`{"sources": [{"path": …, "kind": "loose", "target": "acme/shop"}], "groups": ["1:acme/shop"], "state": …}`), so its
 dates and conversion come along. Otherwise file by file: save it at the new path with its current content and index
-trigger, then `whaat memory delete` the old path; its validity then counts from that day. Never edit whaat's state
+trigger and the reason `moved from <old path>`, then `whaat memory delete <old path> --reason "moved to <new path>"`; its validity then counts from that day. Never edit whaat's state
 files by hand to carry dates: name the gap to the user instead. Links name memories, not paths, so a move breaks none;
 check that they still resolve.
 
@@ -134,9 +137,3 @@ session-end step that saves memory the old way. Report these and change nothing:
 decides.
 
 Never delete or edit a source after the import. It stays the user's fallback.
-
-## How a turn ends
-
-whaat's page follows this session by its last line. End a turn that asks the user something in text with the exact
-line `[whaat] waiting for your answer`; end the turn that finishes the migration, with nothing left to ask, with
-`[whaat] done`. A turn that waits for the page (the plan is made, the user chooses there) ends with neither.

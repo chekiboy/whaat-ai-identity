@@ -1,21 +1,21 @@
-"""Starting an identity's own agent from the terminal: when the identity has an agent config dir,
-its session runs the start command with `CLAUDE_CONFIG_DIR` set to it and whaat's plugin, and whaat writes the
-identity's kept token into that config's settings, so the agent works as the identity chosen.
-The token goes into the file only: the start command is shown in the UI."""
+"""Starting an identity's own agent: when the identity has an agent config dir, its session runs claude with
+`CLAUDE_CONFIG_DIR` set to it and whaat's plugin, and whaat writes the identity's kept token into that config's
+settings, so the agent works as the identity chosen. The token goes into the file only: the start line the UI shows
+carries none."""
 
 import json
 import logging
 import os
 import re
-import shlex
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from whaat.config import Settings
+from whaat.platform.files import write_private
 
-CONNECTOR = Path(__file__).resolve().parents[4] / "connectors" / "claude_code"
+CONNECTOR = Path(__file__).resolve().parents[3] / "connectors" / "claude_code"
 RULE_BEGIN = "<memory_handling>"
 RULE_END = "</memory_handling>"
 RECALL_RULE = f"""{RULE_BEGIN}
@@ -39,7 +39,7 @@ class AgentTokenMissingError(RuntimeError):
 
 @dataclass(frozen=True)
 class Launch:
-    command: str
+    argv: list[str]
     env: dict[str, str] = field(default_factory=dict)
 
 
@@ -159,21 +159,14 @@ def write_agent_env(settings_file: Path, values: dict[str, str]) -> None:
     data["env"] = {**_env_of(data), **values}
     settings_file.parent.mkdir(parents=True, exist_ok=True)
     part = settings_file.with_name(settings_file.name + ".part")
-    descriptor = os.open(part, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    os.fchmod(descriptor, 0o600)
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-        handle.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+    write_private(part, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
     os.replace(part, settings_file)
 
 
 def launch_for(
-    identity: str,
-    config_dir: str | None,
-    command: str,
-    settings: Settings,
-    stored_token: Callable[[str], str | None],
+    identity: str, config_dir: str | None, settings: Settings, stored_token: Callable[[str], str | None]
 ) -> Launch | None:
-    """How a session of this identity starts; None when it has no agent config, so the plain start command runs."""
+    """How a session of this identity starts."""
     if not config_dir:
         return None
     token = stored_token(identity)
@@ -185,6 +178,4 @@ def launch_for(
         add_recall_rule(Path(config_dir) / "CLAUDE.md")
     except ClaudeMdUnusableError as err:
         logging.getLogger(__name__).warning("recall rule not written: %s", err)
-    return Launch(
-        command=f"{command} --plugin-dir {shlex.quote(str(CONNECTOR))}", env={"CLAUDE_CONFIG_DIR": config_dir}
-    )
+    return Launch(argv=["claude", "--plugin-dir", str(CONNECTOR)], env={"CLAUDE_CONFIG_DIR": config_dir})

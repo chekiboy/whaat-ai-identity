@@ -9,23 +9,25 @@ import urllib.request
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import typer
 import uvicorn
 
+from whaat import agent
 from whaat.config import Settings, load_settings
 from whaat.git import GitCommitter
+from whaat.handoff.store import WAIT_SECONDS
 from whaat.identities.registry import IdentityRegistry
 from whaat.main import create_app
 from whaat.memory import migration_summary
 from whaat.platform.browser import open_app_window, open_url
 from whaat.platform.instance_lock import InstanceRunningError, bind_listener
+from whaat.platform.paths import make_state_dir
 from whaat.platform.process import spawn_detached
 from whaat.platform.repo_key import repo_key
 from whaat.reports.store import report_key
 from whaat.security import load_or_create_token
-from whaat.terminal import agent
 
 SERVER_LOG_NAME = "server.log"
 ENSURE_TIMEOUT_SECONDS = 15.0
@@ -102,20 +104,38 @@ def _ensure_running(settings: Settings) -> str:
         raise typer.Exit(1) from err
 
 
+def _sandbox_hint(settings: Settings) -> str:
+    """Inside Claude Code's sandbox the running server is out of reach and its folder is not writable."""
+    return (
+        "If Claude Code's sandbox is on, allow the `whaat` commands: run them outside the sandbox, or let the sandbox"
+        f" reach {settings.host}:{settings.port} and write {settings.state_dir} and uv's cache (`uv cache dir`)."
+    )
+
+
 def _start_unless_running(settings: Settings) -> str:
     where = f"{settings.instance} on {settings.public_url}"
     if running_instance(settings, _probe(settings)):
         return f"whaat {where} already runs"
-    settings.state_dir.mkdir(parents=True, exist_ok=True)
     log_path = settings.state_dir / SERVER_LOG_NAME
-    with log_path.open("ab") as log:
-        spawn_detached([sys.executable, "-m", "whaat", "serve"], log)
+    try:
+        make_state_dir(settings.state_dir)
+        with log_path.open("ab") as log:
+            spawn_detached([sys.executable, "-m", "whaat", "serve"], log)
+    except OSError as err:
+        typer.echo(
+            f"whaat {where} does not answer here and cannot be started here ({err}). {_sandbox_hint(settings)}",
+            err=True,
+        )
+        raise typer.Exit(1) from err
     deadline = time.monotonic() + ENSURE_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         if running_instance(settings, _probe(settings)):
             return f"whaat {where} started"
         time.sleep(0.2)
-    typer.echo(f"whaat did not answer within {ENSURE_TIMEOUT_SECONDS:.0f}s; see {log_path}", err=True)
+    typer.echo(
+        f"whaat did not answer within {ENSURE_TIMEOUT_SECONDS:.0f}s; see {log_path}. {_sandbox_hint(settings)}",
+        err=True,
+    )
     raise typer.Exit(1)
 
 
@@ -193,8 +213,25 @@ def connect(
     typer.echo(f"whaat's recall rule is in {plugin_file.parent / 'CLAUDE.md'}")
 
 
+def _open_or_say(url: str, browser: str | None) -> None:
+    """Open the page; when no browser could be started, print the address so the user can open it."""
+    try:
+        open_url(url, browser)
+    except (OSError, subprocess.CalledProcessError) as err:
+        typer.echo(f"could not open a browser ({err}); open it yourself:", err=True)
+        typer.echo(url)
+        raise typer.Exit(1) from err
+
+
 def report_url(settings: Settings, report_id: str) -> str:
     return f"{settings.public_url}/ui/reports/{report_key(report_id)}"
+
+
+@app.command("state-dir")
+def print_state_dir() -> None:
+    """Print this instance's state folder (where the admin token is), so tools outside the server need not know the
+    rule; WHAAT_INSTANCE and WHAAT_STATE_DIR count as for the server."""
+    typer.echo(load_settings().state_dir)
 
 
 @app.command("open")
@@ -203,7 +240,7 @@ def open_report(report_id: Annotated[str, typer.Argument(help="The report's id, 
     settings = load_settings()
     typer.echo(_ensure_running(settings), err=True)
     url = report_url(settings, report_id)
-    open_url(url, settings.browser)
+    _open_or_say(url, settings.browser)
     typer.echo(url)
 
 
@@ -236,7 +273,7 @@ def open_app() -> None:
     url = f"{settings.public_url}/ui/"
     if not open_app_window(url, settings.state_dir / APP_PROFILE_DIR):
         typer.echo("no Chrome, Chromium, Edge or Brave found: opening the default browser", err=True)
-        open_url(url, settings.browser)
+        _open_or_say(url, settings.browser)
     typer.echo(url)
 
 
@@ -428,20 +465,27 @@ def memory_where(
 
 @memory_app.command("save")
 def save_memory() -> None:
-    """Write the memory read from stdin as JSON (path, content, trigger, unindex) exactly as given, and commit it."""
+    """Write the memory read from stdin as JSON (path, content, trigger, unindex, reason) exactly as given, and commit
+    it; the reason, why it is saved or changed, goes into the commit message."""
     settings = load_settings()
     token = _identity_token(settings)
     _post_to_whaat(settings, "/api/v1/memory/memories", _object_from_stdin(), token)
 
 
 @memory_app.command("delete")
-def memory_delete(path: Annotated[str, typer.Argument(help="The memory's path below the memory root.")]) -> None:
+def memory_delete(
+    path: Annotated[str, typer.Argument(help="The memory's path below the memory root.")],
+    reason: Annotated[
+        str | None, typer.Option(help="Why it is removed, in one line; the commit message carries it.")
+    ] = None,
+) -> None:
     """Remove a memory that was simply wrong and its index line, in one commit."""
     settings = load_settings()
     token = _identity_token(settings)
     typer.echo(_ensure_running(settings), err=True)
     request = urllib.request.Request(
-        f"http://{settings.host}:{settings.port}/api/v1/memory/memories/{urllib.parse.quote(path)}",
+        f"http://{settings.host}:{settings.port}/api/v1/memory/memories/{urllib.parse.quote(path)}"
+        + (f"?{urllib.parse.urlencode({'reason': reason})}" if reason is not None else ""),
         headers={"Authorization": f"Bearer {token}"},
         method="DELETE",
     )
@@ -582,7 +626,7 @@ def outcome_record(
     outcome: Annotated[str, typer.Argument(help="held | misled | irrelevant")],
     paths: Annotated[list[str], typer.Argument(help="Memory paths as `reads` prints them.")],
 ) -> None:
-    """Record whether recalled memories held up, as memory-outcome record; held rescores at once."""
+    """Record whether memories this session read or recalled held up, as memory-outcome record; rescores at once."""
     _print_text(_memory_call("outcome/record", {"session": _session(), "outcome": outcome, "paths": paths}))
 
 
@@ -737,5 +781,35 @@ def wait_for_decisions(
             continue
         if collected["sent"]:
             typer.echo(collected["text"])
+            return
+        time.sleep(every)
+
+
+@app.command("wait")
+def wait_for_page(
+    kind: Annotated[Literal["curation", "migration"], typer.Argument(help="Which page's session waits.")],
+    report: Annotated[str | None, typer.Option("--report", help="The curation report this session wrote.")] = None,
+    plan: Annotated[str | None, typer.Option("--plan", help="The migration plan this session made.")] = None,
+    every: Annotated[
+        float, typer.Option(min=0.5, max=WAIT_SECONDS / 2, help="Seconds between two looks.")
+    ] = DECISIONS_POLL_SECONDS,
+) -> None:
+    """Wait until the user acts on the page of this session's curation report or migration plan, then print the call
+    whaat composed from it. Run it in the background: it asks the server in short calls, so a server restart in
+    between only delays it. Every look counts as waiting only for a while, hence the upper bound on `--every`."""
+    work = report if kind == "curation" else plan
+    if not work:
+        typer.echo(f"whaat wait {kind} needs {'--report' if kind == 'curation' else '--plan'}", err=True)
+        raise typer.Exit(2)
+    settings = load_settings()
+    token = _identity_token(settings)
+    while True:
+        try:
+            handed = _post_json(settings, "/api/v1/handoff/next", {"kind": kind, "work": work}, token)
+        except (urllib.error.URLError, ConnectionError, TimeoutError):
+            time.sleep(every)
+            continue
+        if handed["call"]:
+            typer.echo(handed["call"])
             return
         time.sleep(every)

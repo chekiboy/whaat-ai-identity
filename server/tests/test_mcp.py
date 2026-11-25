@@ -271,10 +271,11 @@ def test_an_outcome_counts_when_it_came_after_the_last_change_even_on_the_same_d
         f"{(now - datetime.timedelta(hours=1)).isoformat(timespec='seconds')}\tmisled\tacme/shop/feedback_x.md\tb4\n"
     )
 
-    _, opened = calls(
+    _, _, opened = calls(
         client,
         settings,
         token,
+        ("memory_open", opening),
         ("memory_record", {"outcome": "held", "paths": ["acme/shop/feedback_x.md"]}),
         ("memory_open", opening),
     )
@@ -415,3 +416,40 @@ def test_the_purposes_the_tools_take_are_the_ones_recall_knows() -> None:
 
     assert set(typing.get_args(Purpose)) == set(PURPOSES) - {"load"}
     assert set(typing.get_args(DumpPurpose)) == set(DUMP_PURPOSES)
+
+
+def test_a_reason_given_over_mcp_goes_into_the_commit_message(
+    client: TestClient, settings: Settings, token: str
+) -> None:
+    save = {"path": "acme/shop/feedback_x.md", "content": CONTENT, "trigger": "When x", "reason": "learned in a review"}
+    remove = {"path": "acme/shop/feedback_x.md", "reason": "it was wrong"}
+    folder = settings.state_dir / "identities" / "trial"
+
+    calls(client, settings, token, ("memory_save", save))
+    saved = subprocess.run(["git", "-C", str(folder), "log", "-1", "--format=%s"], capture_output=True, text=True)
+    calls(client, settings, token, ("memory_delete", remove))
+    deleted = subprocess.run(["git", "-C", str(folder), "log", "-1", "--format=%s"], capture_output=True, text=True)
+
+    assert (saved.stdout, deleted.stdout) == (
+        "memory: add acme/shop/feedback_x.md — learned in a review\n",
+        "memory: delete acme/shop/feedback_x.md — it was wrong\n",
+    )
+
+
+def test_an_empty_reason_over_mcp_is_refused_as_the_api_refuses_it(
+    client: TestClient, settings: Settings, token: str
+) -> None:
+    save = {"path": "acme/shop/feedback_x.md", "content": CONTENT, "trigger": "When x"}
+    remove = {"path": "acme/shop/feedback_x.md", "reason": ""}
+
+    _, saved, deleted = calls(
+        client,
+        settings,
+        token,
+        ("memory_save", save),
+        ("memory_save", {**save, "reason": ""}),
+        ("memory_delete", remove),
+    )
+
+    assert saved.content[0].text.startswith("Error executing tool memory_save: ")
+    assert deleted.content[0].text.startswith("Error executing tool memory_delete: ")

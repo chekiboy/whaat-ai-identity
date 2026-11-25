@@ -1,5 +1,6 @@
 /* The curation report page (arc theme colours per action). */
-.cur-page {
+.cur-page,
+.cur-modal {
   --a-delete: #d63b25;
   --a-merge: #7b5aa6;
   --a-move: #2e78c2;
@@ -11,6 +12,8 @@
   --cur-ink: #1a1712;
   --cur-muted: #6b6250;
   --cur-line: #c4b697;
+}
+.cur-page {
   display: grid;
   gap: 18px;
 }
@@ -583,7 +586,7 @@
   color: var(--cur-muted);
 }
 
-/* modals */
+/* modals; they share the report page's ink (above), so a modal opened outside the page reads the same */
 .cur-modal {
   position: fixed;
   inset: 0;

@@ -79,6 +79,31 @@ def test_a_second_save_replaces_the_line_in_place_and_is_an_update(
     assert git(settings, "log", "-1", "--format=%s") == f"memory: update {PATH}\n"
 
 
+def test_the_reason_of_a_save_or_a_delete_goes_into_its_commit_message(
+    client: TestClient, settings: Settings, trial: dict[str, str]
+) -> None:
+    save(client, trial, reason="the user named the rule")
+    added = git(settings, "log", "-1", "--format=%s")
+    save(client, trial, content=CONTENT.replace("Do x.", "Do x, always."), reason="the trigger missed a review")
+    updated = git(settings, "log", "-1", "--format=%s")
+    client.delete(f"/api/v1/memory/memories/{PATH}", params={"reason": "it was wrong"}, headers=trial)
+    deleted = git(settings, "log", "-1", "--format=%s")
+
+    assert (added, updated, deleted) == (
+        f"memory: add {PATH} — the user named the rule\n",
+        f"memory: update {PATH} — the trigger missed a review\n",
+        f"memory: delete {PATH} — it was wrong\n",
+    )
+
+
+@pytest.mark.parametrize("reason", ["one\ntwo", "one\rtwo", ""])
+def test_a_reason_that_is_not_one_line_is_refused(client: TestClient, trial: dict[str, str], reason: str) -> None:
+    saved = save(client, trial, reason=reason)
+    deleted = client.delete(f"/api/v1/memory/memories/{PATH}", params={"reason": reason}, headers=trial)
+
+    assert (saved.status_code, deleted.status_code) == (422, 422)
+
+
 def test_a_core_file_is_listed_as_core_in_the_personal_index(
     client: TestClient, settings: Settings, trial: dict[str, str]
 ) -> None:
@@ -222,6 +247,7 @@ def test_browse_carries_each_store_memorys_score_and_none_for_a_personal_one(
         "age_days": 0,
         "history": None,
         "source": None,
+        "weight": 0.9,
         "outcomes": {},
     }
     assert cards["personal/user_y.md"]["validity"] is None

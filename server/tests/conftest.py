@@ -59,13 +59,3 @@ def client(settings: Settings) -> TestClient:
 def no_machine_identities(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests never read this machine's live identities; a test that wants them sets WHAAT_LIVE_IDENTITIES itself."""
     monkeypatch.delenv("WHAAT_LIVE_IDENTITIES", raising=False)
-
-
-@pytest.fixture(autouse=True)
-def no_machine_themes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Tests never read this machine's terminal apps; a test that wants themes sets the readers itself."""
-    from whaat.terminal import themes
-
-    monkeypatch.setattr(themes, "READERS", [])
-    monkeypatch.setattr(themes, "TERMINAL_APP", tmp_path / "no-terminal.plist")
-    monkeypatch.setattr(themes.default_theme_id, "__defaults__", (tmp_path / "no-terminal.plist",))

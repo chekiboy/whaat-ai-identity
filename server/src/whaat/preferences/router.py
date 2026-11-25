@@ -22,15 +22,14 @@ StoreDep = Annotated[PreferencesStore, Depends(_store)]
 
 @router.get("")
 def get_preferences(_: AdminDep, store: StoreDep) -> Preferences:
-    """What the UI remembers: the language, the identity it opens with and the one used last, and the terminal's default
-    command, theme and saved folders."""
+    """What the UI remembers: the language, the identity it opens with and the one used last, and each identity's
+    agent config folder."""
     return Preferences.model_validate(store.load())
 
 
 @router.patch("")
 def update_preferences(body: PreferencesPatch, _: AdminDep, store: StoreDep) -> Preferences:
-    """Change what is given and keep the rest; an empty command goes back to the default."""
-    terminal = body.terminal
+    """Change what is given and keep the rest."""
     identity = body.identity
     agents = {
         who: str(Path(folder).expanduser()) if folder else ""
@@ -47,8 +46,5 @@ def update_preferences(body: PreferencesPatch, _: AdminDep, store: StoreDep) -> 
         open_with=identity.open_with if identity else None,
         last_identity=identity.last if identity else None,
         agents=agents or None,
-        command=terminal.command if terminal else None,
-        theme=terminal.theme if terminal else None,
-        opener=terminal.opener if terminal else None,
     )
     return Preferences.model_validate(store.load())

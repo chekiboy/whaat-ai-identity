@@ -2,9 +2,11 @@
 
 *Not just an agent. An agent with a past.*
 
-Whaat is an **AI Identity Runtime**: a local-first system that gives AI agents persistent memory and identity continuity across sessions. It keeps an agent's memory, journal, history and session lifecycle on your own machine, so the identity does not start from zero every time a new session begins. Whaat is for everyone who works with AI agents over time, developers included: anyone who wants more than a transcript or a pile of notes, and an agent whose past can inform its present while its memories stay inspectable, correctable and under their control. It runs on macOS, connects to Claude Code through a plugin and to any MCP (Model Context Protocol) client through its MCP server, and keeps every memory as a plain markdown file in a local Git repository.
+Whaat is an **AI Identity Runtime**: a local-first system that gives AI agents persistent memory and identity continuity across sessions. It keeps an agent's memory, journal, history and session lifecycle on your own machine, so the identity does not start from zero every time a new session begins. Whaat is for everyone who works with AI agents over time, developers included: anyone who wants more than a transcript or a pile of notes, and an agent whose past can inform its present while its memories stay inspectable, correctable and under their control. It runs on macOS and has been tested on Linux in a container, connects to Claude Code through a plugin and to any MCP (Model Context Protocol) client through its MCP server, and keeps every memory as a plain markdown file in a local Git repository.
 
 For example: on Monday you correct how your agent runs the tests. On Friday, in a new session, the agent recalls that correction as soon as the task touches the tests, and you can open the markdown file where it is kept and see when it was written and changed.
+
+It works just as well as a coding agent's memory. Memory sits in layers: practice that holds everywhere, facts shared by a group of repositories, one repository's own facts and traps, and a personal layer about you. In a session the agent sees one line per memory, and only for the layers that fit the repository it works in, so its context stays small. A trap found once, such as a column rename that skips a table's schema check, comes back when a later task touches that table. A fact nobody has confirmed or used for months is flagged for checking against the code instead of being trusted blindly. We keep the memory of our own development work in it, across eight repositories; how often recalled memories proved right is under [Measured](#measured-not-only-claimed).
 
 The model is the reasoning engine. Whaat provides the continuity around it: what the identity remembers, what it has experienced, what it has learned, and the context it carries into its next session. The model can change; the identity's stored history and memory can remain.
 
@@ -17,8 +19,8 @@ The agent decides what to remember and writes it; Whaat saves it, puts the right
 | | |
 |---|---|
 | Category | AI Identity Runtime: persistent AI memory and identity continuity for AI agents |
-| Version | 0.4.0, early software: the API, the CLI and the file formats may change before 1.0 |
-| Platform | macOS; other systems are not supported yet |
+| Version | 0.5.0, early software: the API, the CLI and the file formats may change before 1.0 |
+| Platform | macOS; Linux tested in a container, not yet on a desktop; WSL2 and Windows not tried yet |
 | Integrations | Claude Code (plugin with skills and hooks); any MCP client that runs servers over stdio |
 | Storage | Local and file-based: markdown memories and JSON reports, one Git repository per identity |
 | Interfaces | An app (in a browser or its own window), the `whaat` command line, a JSON API on 127.0.0.1, an MCP server |
@@ -53,7 +55,7 @@ Each capability has its own page under [`docs/`](docs/README.md).
 - **Journal and session reports.** At the end of a session the agent writes what happened and what it learned; Whaat keeps it as JSON in the identity's private folder. [Journal and session end](docs/journal.md), [Reports](docs/reports.md)
 - **Any MCP client.** `whaat mcp` serves the same memory, journal and report calls over MCP, so an agent outside Claude Code can work as an identity too. [MCP layer](docs/mcp.md)
 - **Several identities.** Each agent identity has its own folder, git history and token. A token reads and writes only its own identity; the admin token, which the UI uses, sees all of them. [Identities](docs/identities.md)
-- **An app to look at it all.** A home page per identity, the memory as a list, a brain and rings, the reports, the curation and migration pages, the settings, and an experimental terminal that runs agent sessions in tmux. [The app](docs/app.md), [Terminal](docs/terminal.md)
+- **An app to look at it all.** A home page per identity, the memory as a list, a brain and rings, the reports, the curation and migration pages, and the settings. [The app](docs/app.md)
 
 Every command is listed on one page: [Command line](docs/cli.md).
 
@@ -136,22 +138,21 @@ The settings: the identities, each with its own folder and token, and the app's 
 
 The pictures show generated sample data.
 
-## Status: what works, what is experimental
+## Status: what works, what is planned
 
-Version 0.4.0: early software. Until 1.0, the API, the CLI and the file formats may change from one version to the next. The app shows the running version in its status bar. What changed in each version is in [`CHANGELOG.md`](CHANGELOG.md).
+Version 0.5.0: early software. Until 1.0, the API, the CLI and the file formats may change from one version to the next. The app shows the running version in its status bar. What changed in each version is in [`CHANGELOG.md`](CHANGELOG.md).
 
 - **Works today:** layered memory with recall and scoring, saving through the agent, curation, migration, the journal and session reports, several identities, the Claude Code plugin, the MCP layer and the app.
-- **Experimental:** the terminal, which runs agent sessions inside the app.
 - **Concept only:** Self Journey.
-- **Platform:** macOS only.
+- **Platform:** macOS, in daily use. Linux tested in a Debian container: the server, the app window and real Claude Code sessions through the plugin; not yet on a Linux desktop. WSL2 and native Windows not tried yet.
 
 ## Requirements
 
-- macOS (other systems are not supported yet).
+- macOS, or Linux (tested in a container, not yet on a desktop).
 - [uv](https://docs.astral.sh/uv/), which installs the Python (3.11 or newer) the server needs.
 - Node.js and [pnpm](https://pnpm.io/), to build the UI.
-- git; tmux for the terminal.
-- [Claude Code](https://docs.claude.com/en/docs/claude-code) for the plugin, or any client that runs MCP servers over stdio for the MCP layer.
+- git.
+- [Claude Code](https://docs.claude.com/en/docs/claude-code) 2.1.139 or newer for the plugin, whose hooks need it, or any client that runs MCP servers over stdio for the MCP layer.
 
 ## Getting started
 
@@ -266,7 +267,6 @@ MCP client ──> whaat mcp ───┘
 - **Tokens stay out of the memory.** The server checks a SHA-256 digest of each token. Tokens are kept in the state folder, never in an identity's Git repository, and `connect` writes them into settings files without printing them.
 - **Private files.** Memory files are readable only by you (folders 700, files 600).
 - **The app holds the admin token.** The server puts it into the page it serves, so anyone who can open the app on your machine can act as the admin. For a local app this is accepted.
-- **The terminal runs commands on your machine.** It needs the admin token and checks that the page opening a session is Whaat's own, because any website in your browser could try to connect to a local port.
 
 ## Repository layout
 
@@ -305,10 +305,10 @@ For the agent that works through Whaat, yes: a hook declines writes into Claude 
 Yes. The migration reads a memory store, a personal memory folder, Claude Code's auto-memory and a subagent's memory, and imports the groups you choose. It never changes the sources. See [Migration](docs/migration.md).
 
 ### Which operating systems are supported?
-macOS. Other systems are not supported yet.
+macOS, which is where it is used every day. Linux has been tested in a Debian container, with the server, the app window and real Claude Code sessions, but not yet on a Linux desktop. WSL2 and native Windows have groundwork in the code and have not been tried yet.
 
 ### What license does Whaat use?
-Version 0.2.0 and later, including 0.4.0, are licensed under the Business Source License 1.1, which makes the code source-available, not open source. Release 0.1.0 remains under the Apache License 2.0. See [License](#license).
+Version 0.2.0 and later, including 0.5.0, are licensed under the Business Source License 1.1, which makes the code source-available, not open source. Release 0.1.0 remains under the Apache License 2.0. See [License](#license).
 
 ## Author
 

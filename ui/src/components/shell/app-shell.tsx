@@ -1,20 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  Brain,
-  FileText,
-  House,
-  Info,
-  type LucideIcon,
-  PanelLeft,
-  Scale,
-  Search,
-  Settings,
-  SquareTerminal,
-} from "lucide-react";
+import { Brain, FileText, House, Info, type LucideIcon, PanelLeft, Scale, Search, Settings } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { browseMemoriesOptions, getHealthOptions } from "@/client/@tanstack/react-query.gen";
 import { CreateIdentity } from "@/components/identities/create-identity";
+import { StartLineModal } from "@/components/start-line";
 import { applyLanguage, LANGUAGES, useLanguage, useTranslation } from "@/i18n";
 import { useCurrentHeading } from "@/lib/breadcrumb";
 import { useStartCuration } from "@/lib/curation";
@@ -26,8 +16,8 @@ import { ModuleBarProvider, ModuleBarSlot } from "./module-bar";
 import "@/styles/shell.css";
 
 type Module = {
-  to: "/" | "/memory" | "/reports" | "/terminal" | "/about" | "/settings";
-  label: "home" | "memory" | "reports" | "terminal" | "about" | "settings";
+  to: "/" | "/memory" | "/reports" | "/about" | "/settings";
+  label: "home" | "memory" | "reports" | "about" | "settings";
   page: string;
   icon: LucideIcon;
   key: string;
@@ -38,7 +28,6 @@ const MODULES: Module[] = [
   HOME,
   { to: "/memory", label: "memory", page: "Memory", icon: Brain, key: "m" },
   { to: "/reports", label: "reports", page: "Reports", icon: FileText, key: "r" },
-  { to: "/terminal", label: "terminal", page: "Terminal", icon: SquareTerminal, key: "t" },
 ];
 const ABOUT: Module = { to: "/about", label: "about", page: "About", icon: Info, key: "i" };
 const SETTINGS: Module = { to: "/settings", label: "settings", page: "Settings", icon: Settings, key: "s" };
@@ -54,6 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [sideOff, setSideOff] = useState(false);
   const [palette, setPalette] = useState(false);
+  const curation = useStartCuration();
   const restarting = useRestart();
   const { preferences } = usePreferences();
   const { language } = useLanguage();
@@ -126,7 +116,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <m.icon />
               <span className="sh-tip">
                 {t(`shell.${m.label}`)}
-                {m.to === "/terminal" && <i className="sh-exp-tip"> · {t("terminal.experimental")}</i>}{" "}
                 <kbd>G {m.key.toUpperCase()}</kbd>
               </span>
             </Link>
@@ -175,7 +164,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         <TopBar module={current} onPalette={() => setPalette(true)} />
         <main className="sh-main">{children}</main>
         <StatusBar restart={restart} stop={stop} />
-        {palette && <Palette onClose={() => setPalette(false)} onRestart={restart.ask} onStop={stop.ask} />}
+        {palette && (
+          <Palette
+            onClose={() => setPalette(false)}
+            onRestart={restart.ask}
+            onStop={stop.ask}
+            onCurate={curation.can ? curation.start : null}
+          />
+        )}
+        {curation.line && (
+          <StartLineModal
+            title={t("curation.lineTitle")}
+            note={t(curation.waiting ? "curation.lineWaiting" : "curation.lineNote")}
+            line={curation.line}
+            onClose={curation.clear}
+          />
+        )}
         {stop.state === "stopped" && (
           <div className="sh-stopped" role="alert">
             <div>
@@ -382,12 +386,21 @@ function FirstIdentity() {
 
 type Command = { kind: string; label: string; sub?: string; run: () => void };
 
-function Palette({ onClose, onRestart, onStop }: { onClose: () => void; onRestart: () => void; onStop: () => void }) {
+function Palette({
+  onClose,
+  onRestart,
+  onStop,
+  onCurate,
+}: {
+  onClose: () => void;
+  onRestart: () => void;
+  onStop: () => void;
+  onCurate: (() => void) | null;
+}) {
   const navigate = useNavigate();
   const choose = useChoose();
   const identities = useIdentities();
   const { persona } = usePersona();
-  const curation = useStartCuration();
   const { data: browse } = useQuery(browseMemoriesOptions());
   const memories = (browse?.find((who) => who.identity === persona)?.layers ?? []).flatMap((l) => l.memories);
   const [query, setQuery] = useState("");
@@ -409,7 +422,7 @@ function Palette({ onClose, onRestart, onStop }: { onClose: () => void; onRestar
     })),
     { kind: t("shell.kindServer"), label: t("shell.restart"), run: onRestart },
     { kind: t("shell.kindServer"), label: t("shell.stop"), run: onStop },
-    ...(curation.can ? [{ kind: t("shell.kindModule"), label: t("curation.start"), run: curation.start }] : []),
+    ...(onCurate ? [{ kind: t("shell.kindModule"), label: t("curation.start"), run: onCurate }] : []),
     ...identities.map((id) => ({ kind: t("shell.kindPersona"), label: id, run: () => choose(id) })),
     ...memories.map((m) => ({
       kind: m.frontmatter.type ?? t("shell.kindMemory"),

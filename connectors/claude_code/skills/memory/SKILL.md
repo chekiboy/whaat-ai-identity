@@ -48,7 +48,7 @@ A file with no index line that another file `supersedes` is history: never act o
 
 1. `grep -ril <term> <memory>` first. Update the existing file rather than add a near-duplicate. If the
    new fact contradicts an old one: when the old one was simply wrong, fix it, or delete it with
-   `whaat memory delete <path>`; when it held until the user changed course, write the new file with
+   `whaat memory delete <path> --reason "<why, one line>"`; when it held until the user changed course, write the new file with
    `supersedes: <old name>` and remove the old one's index line (`unindex` below), but keep the file, so the
    change stays findable.
 2. Skip: what code, git history, CLAUDE.md or docs already say; per-conversation state (review
@@ -79,8 +79,9 @@ A file with no index line that another file `supersedes` is history: never act o
    it then). `source` says what backs it; an inference never reaches `certain`. `confirmed` is the last day
    the fact was checked; set it when you re-verify an existing memory, and when you fix what it says: an edit
    alone does not reset its age. memory-lint scores each memory from
-   its source, minus 0.2 per 30 days since the latest of `confirmed`, its last `held` outcome (Task end)
-   and its first commit. A memory nobody used successfully or checked for two to three months turns `stale`
+   its source (unset: 0.9, or 0.8 for a repo dir's `project` or `reference`), minus 0.2 per 30 days since the
+   latest of `confirmed`, its last `held` outcome (Task end) and its first commit; a `held` after more than 30 days
+   of silence winds the clock back one week only. A memory nobody used successfully or checked for two to three months turns `stale`
    and becomes a curation `verify` candidate.
 4. Its index line is `- <name>.md — <same trigger>` in that dir's `MEMORY.md` (a core file: `- core/<name>.md — …`
    in `<personal>/MEMORY.md`). The index is a recall trigger list: it says when to open the file, not what the file says.
@@ -89,8 +90,10 @@ A file with no index line that another file `supersedes` is history: never act o
    weekly self-model-journal may propose folding into the core.
 5. Write the file and the trigger through whaat, which writes the file as given, sets that index line, and
    commits only those paths: put `{"path": "<the file's path>", "content": "<the whole file>", "trigger":
-   "<same trigger>", "unindex": ["<path of a memory this one supersedes>"]}` into a JSON file in the scratchpad
-   with the Write tool, then `whaat memory save < <that file>`. Say the `commit` and any `warnings`.
+   "<same trigger>", "unindex": ["<path of a memory this one supersedes>"], "reason": "<why it is saved or changed,
+   one line>"}` into a JSON file in the scratchpad with the Write tool, then `whaat memory save < <that file>`. The
+   reason becomes part of the commit message, so the history says why each memory changed: give it every time. Say
+   the `commit` and any `warnings`.
 
 ## task-end: Task end
 
@@ -106,4 +109,4 @@ Before reporting a task done:
    - `held`: the work relied on it and it proved right. Only this refreshes its validity; a read alone doesn't.
    - `misled`: it turned out wrong or stale. Fix or supersede it now, through Save.
    - `irrelevant`: its trigger opened it for a task it doesn't fit. Curation retriggers repeat offenders.
-   Leave out a memory you can't judge. Personal memories (`personal:…`) are not recorded yet: leave them out.
+   Only a memory this session read or recalled is recorded. Leave out a memory you can't judge. Personal memories (`personal:…`) are not recorded yet: leave them out.

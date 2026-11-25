@@ -266,6 +266,10 @@ def build(settings: Settings, token: str, environ: Mapping[str, str] = os.enviro
         content: Annotated[str, Field(description="The whole file, frontmatter included, written as given.")],
         trigger: Annotated[str, Field(description="The index line's text after the name: when to open it.")],
         unindex: Annotated[list[str], Field(description="Memories this one supersedes.")] = [],  # noqa: B006
+        reason: Annotated[
+            str | None,
+            Field(description="Why it is saved, changed or removed, in one line; the commit message carries it."),
+        ] = None,
     ) -> Any:
         """Write a memory and its index line exactly as given, and commit it; the warnings name what memory-lint finds
         in it. <name> is <type>_<slug>, type feedback (how to work), project (a fact about a codebase or domain) or
@@ -274,17 +278,22 @@ def build(settings: Settings, token: str, environ: Mapping[str, str] = os.enviro
         day the fact was checked: set it when you re-verify it or fix what it says, since an edit alone does not reset
         its age); then the rule or fact in 1-3 sentences, a **Why:** line and a **How to apply:** line. Write
         ~ for the home dir, absolute dates, and link related memories as [[<name>]]. These names use underscores, not
-        the client's own memory naming. A personal memory is saved as personal/<file> and listed as personal:<file>."""
-        return api.call(
-            "POST", "/memory/memories", {"path": path, "content": content, "trigger": trigger, "unindex": unindex}
-        )
+        the client's own memory naming. A personal memory is saved as personal/<file> and listed as personal:<file>.
+        Give a reason every time: why it is saved or changed, which the commit message keeps."""
+        body = {"path": path, "content": content, "trigger": trigger, "unindex": unindex}
+        return api.call("POST", "/memory/memories", {**body, **({"reason": reason} if reason is not None else {})})
 
     @mcp.tool(annotations=DESTRUCTIVE)
     def memory_delete(
         path: Annotated[str, Field(description="The memory's path below the memory root.")],
+        reason: Annotated[
+            str | None,
+            Field(description="Why it is saved, changed or removed, in one line; the commit message carries it."),
+        ] = None,
     ) -> Any:
-        """Remove a memory that was simply wrong, and its index line, in one commit."""
-        return api.call("DELETE", "/memory/memories/" + urllib.parse.quote(path))
+        """Remove a memory that was simply wrong, and its index line, in one commit; give the reason why."""
+        query = "?" + urllib.parse.urlencode({"reason": reason}) if reason is not None else ""
+        return api.call("DELETE", "/memory/memories/" + urllib.parse.quote(path) + query)
 
     @mcp.tool(annotations=READ_ONLY)
     def memory_reads(
@@ -298,9 +307,9 @@ def build(settings: Settings, token: str, environ: Mapping[str, str] = os.enviro
         outcome: Literal["held", "misled", "irrelevant"],
         paths: Annotated[list[str], Field(description="Memory paths, as memory_reads printed them.")],
     ) -> str:
-        """Before reporting a task done, record whether the memories it recalled held up: held (relied on and right,
-        rescored at once), misled (wrong or stale: fix or supersede it now with memory_save) or irrelevant (its trigger
-        fired for a task it does not fit). Personal memories are not scored: leave them out."""
+        """Before reporting a task done, record whether the memories it read or recalled held up: held (relied on and
+        right), misled (wrong or stale: fix or supersede it now with memory_save) or irrelevant (its trigger fired for a
+        task it does not fit); each rescores at once. Personal memories are not scored: leave them out."""
         return text(api.call("POST", "/memory/outcome/record", {"session": this, "outcome": outcome, "paths": paths}))
 
     @mcp.tool(annotations=DESTRUCTIVE)
