@@ -28,6 +28,10 @@ What changed in each version of whaat. The format follows [Keep a Changelog](htt
 - **API.** `POST /api/v1/curation/start` and `POST /api/v1/memory/migration/start` return the line to paste (`command`) and whether a session already waits (`waiting`) instead of a terminal session. The curation and migration answers say `handed` instead of `typed` and no longer name a session. `POST /api/v1/curation/done` takes the `report_id` instead of the identity. New: `POST /api/v1/handoff/next` (`kind` and `work`, the report or plan id), which the waiting session asks with the identity's token. Removed: `GET /api/v1/curation/run-state`.
 - The migrate skill no longer ends its turns with `[whaat] waiting for your answer` or `[whaat] done`: the page no longer follows the session's screen.
 
+### Fixed
+
+- **Saving works on a machine with no git user.** When git cannot work out an author (no `user.name` or `user.email` on a fresh machine, in a container or in CI), whaat fills in only the missing part with `whaat` / `whaat@localhost` instead of failing, so a new identity and its memory are versioned from the first save. Where git can work out an author itself, nothing changes.
+
 ## 0.4.0 (2026-11-20)
 
 ### Added

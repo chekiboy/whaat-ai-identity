@@ -2,6 +2,7 @@ import subprocess
 import threading
 from pathlib import Path
 
+FALLBACK_GIT_USER = (("user.name", "whaat"), ("user.email", "whaat@localhost"))
 _folder_locks: dict[Path, threading.Lock] = {}
 _folder_locks_guard = threading.Lock()
 
@@ -31,7 +32,7 @@ class GitCommitter:
         relative = [path.relative_to(folder).as_posix() for path in paths]
         with folder_lock(folder):
             self._git(folder, "add", "--", *relative)
-            self._git(folder, "commit", "--quiet", "-m", message, "--", *relative)
+            self._git(folder, *self._fallback_git_user(folder), "commit", "--quiet", "-m", message, "--", *relative)
             return self._git(folder, "rev-parse", "HEAD").strip()
 
     def move(self, folder: Path, moves: list[tuple[Path, Path]], message: str) -> str:
@@ -50,7 +51,7 @@ class GitCommitter:
                     src.rename(dst)
                     paths.append(target)
             self._git(folder, "add", "--", *[dst.relative_to(folder).as_posix() for _, dst in moves])
-            self._git(folder, "commit", "--quiet", "-m", message, "--", *paths)
+            self._git(folder, *self._fallback_git_user(folder), "commit", "--quiet", "-m", message, "--", *paths)
             return self._git(folder, "rev-parse", "HEAD").strip()
 
     def revert(self, folder: Path, shas: list[str], inside: str) -> list[str]:
@@ -73,7 +74,9 @@ class GitCommitter:
             newest_first = self._git(folder, "rev-list", "--no-walk=sorted", *resolved).split()
             before = self._git(folder, "rev-parse", "HEAD").strip()
             run = subprocess.run(
-                ["git", "-C", str(folder), "revert", "--no-edit", *newest_first], capture_output=True, text=True
+                ["git", "-C", str(folder), *self._fallback_git_user(folder), "revert", "--no-edit", *newest_first],
+                capture_output=True,
+                text=True,
             )
             if run.returncode:
                 subprocess.run(["git", "-C", str(folder), "revert", "--abort"], capture_output=True, check=False)
@@ -82,8 +85,22 @@ class GitCommitter:
             return self._git(folder, "rev-list", "--reverse", f"{before}..HEAD").split()
 
     @staticmethod
+    def _fallback_git_user(folder: Path) -> list[str]:
+        """Only where git would refuse to commit for want of an author; then only the keys it has no value for."""
+        git = ["git", "-C", str(folder)]
+        idents = ("GIT_AUTHOR_IDENT", "GIT_COMMITTER_IDENT")
+        if not any(subprocess.run([*git, "var", ident], capture_output=True).returncode for ident in idents):
+            return []
+        options = []
+        for key, value in FALLBACK_GIT_USER:
+            if subprocess.run([*git, "config", "--get", key], capture_output=True).returncode:
+                options += ["-c", f"{key}={value}"]
+        return options
+
+    @staticmethod
     def _git(folder: Path, *args: str) -> str:
         result = subprocess.run(["git", "-C", str(folder), *args], capture_output=True, text=True, check=False)
         if result.returncode != 0:
-            raise GitCommitError(f"git {args[0]} failed: {(result.stderr or result.stdout).strip()}")
+            command = next(arg for arg in args if not arg.startswith("-") and "=" not in arg)
+            raise GitCommitError(f"git {command} failed: {(result.stderr or result.stdout).strip()}")
         return result.stdout
