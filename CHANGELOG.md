@@ -2,12 +2,14 @@
 
 What changed in each version of whaat. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Until 1.0, a new minor version (0.2, 0.3) may change the API, the CLI or the file formats.
 
-## Unreleased
+## 0.5.0 (2026-11-25)
 
 ### Added
 
+- **`whaat state-dir`** prints the instance's state folder, where the admin token is, so a tool outside the server need not know the rule.
+- **`whaat open` and `whaat app` print the address** when no browser can be started, so it can be opened by hand.
 - **Each memory commit can say why.** A save takes a one-line `reason` (in the JSON, or `reason` in the MCP tool), and a delete takes `--reason`; it is appended to the commit message as `memory: update <path> — <reason>`, so the history shows why a memory changed. The memory, curation and migration skills give one with every change.
-- **Linux, and WSL2 on Windows.** Whaat reads which system it runs on in one place (`platform/system.py`) and acts on it: the state folder is the XDG data folder on Linux and WSL (`$XDG_DATA_HOME/whaat`, else `~/.local/share/whaat`), links open with `xdg-open`, or in the Windows browser through `wslview` on WSL, and `MEMORY_REPO_ROOTS` is split with the system's path separator. `WHAAT_STATE_DIR` still wins. The server's tests and a server start pass on Debian Linux; WSL2 has not been tried yet. macOS installs keep their state folder.
+- **Linux, and WSL2 on Windows (WSL2 not tried yet).** Whaat reads which system it runs on in one place (`platform/system.py`) and acts on it: the state folder is the XDG data folder on Linux and WSL (`$XDG_DATA_HOME/whaat`, else `~/.local/share/whaat`), links open with `xdg-open`, or in the Windows browser through `wslview` on WSL, and `MEMORY_REPO_ROOTS` is split with the system's path separator. `WHAAT_STATE_DIR` still wins. Tested in a Debian container with no Mac files in it, where these worked: the server's tests, a server start, `whaat connect`, the app in its own window on a virtual screen, links through `xdg-open`, and four real Claude Code sessions that saved and recalled memories and recorded whether they held, through the plugin's hooks. Not tried on a Linux desktop or on WSL2. A new state folder is created private (mode 700); an existing one keeps its mode. macOS installs keep their state folder.
 - **Native Windows groundwork, not tried on Windows yet.** The PowerShell start line stops when its folder is missing and puts `CLAUDE_CONFIG_DIR` back when claude ends (run in real PowerShell); the plugin's hooks run through uv in exec form, so they need neither a shell nor a `python3` name; the hook starts the server through uv rather than the bash launcher; token files are written without `os.fchmod`, which Windows lacks before Python 3.13; processes are detached with Windows' creation flags; the server's port is held with `SO_EXCLUSIVEADDRUSE`; a `C:\` origin counts as a local folder. The skills still call the bash launcher, so on Windows they need Git for Windows, which Claude Code's Bash tool needs too.
 - **A `whaat` command that can neither reach nor start the server** (inside Claude Code's sandbox, for example) says so and names the port and the state folder to allow, instead of a traceback; a start that times out names them too.
 - **The plugin's hooks need Claude Code 2.1.139 or newer**, which runs exec-form hooks.
@@ -28,6 +30,8 @@ What changed in each version of whaat. The format follows [Keep a Changelog](htt
 - **The migration's folder picker is gone** with the terminal. The line starts in the identity's Claude Code config folder, as the picker did by default; change the folder in the line before pasting it to start elsewhere.
 - **API.** `POST /api/v1/curation/start` and `POST /api/v1/memory/migration/start` return the line to paste (`command`) and whether a session already waits (`waiting`) instead of a terminal session. The curation and migration answers say `handed` instead of `typed` and no longer name a session. `POST /api/v1/curation/done` takes the `report_id` instead of the identity. New: `POST /api/v1/handoff/next` (`kind` and `work`, the report or plan id), which the waiting session asks with the identity's token. Removed: `GET /api/v1/curation/run-state`.
 - The migrate skill no longer ends its turns with `[whaat] waiting for your answer` or `[whaat] done`: the page no longer follows the session's screen.
+- The README's opening says why Whaat suits a coding agent's memory.
+- Bumped the project version to 0.5.0.
 
 ### Fixed
 
