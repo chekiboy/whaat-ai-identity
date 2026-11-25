@@ -68,3 +68,34 @@ def test_a_server_out_of_reach_that_cannot_be_started_here_says_how_to_allow_it(
 
     err = capsys.readouterr().err
     assert "sandbox" in err and f"{dev.host}:{dev.port}" in err and str(dev.state_dir) in err
+
+
+@pytest.mark.parametrize(
+    ("args", "query"),
+    [(["--reason", "moved to acme/web"], "?reason=moved+to+acme%2Fweb"), (["--reason", ""], "?reason="), ([], "")],
+)
+def test_a_delete_sends_its_reason_to_whaat(monkeypatch: pytest.MonkeyPatch, args: list[str], query: str) -> None:
+    sent: list[str] = []
+
+    class Answer:
+        def __enter__(self) -> "Answer":
+            return self
+
+        def __exit__(self, *exc: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b"{}"
+
+    def urlopen(request: object, timeout: float) -> Answer:
+        sent.append(request.full_url)  # type: ignore[attr-defined]
+        return Answer()
+
+    monkeypatch.setattr(cli, "_identity_token", lambda settings: "t")
+    monkeypatch.setattr(cli, "_ensure_running", lambda settings: "running")
+    monkeypatch.setattr(cli.urllib.request, "urlopen", urlopen)
+
+    result = CliRunner().invoke(cli.app, ["memory", "delete", "acme/shop/feedback_x.md", *args])
+
+    assert result.exit_code == 0
+    assert sent[0].endswith("/api/v1/memory/memories/acme/shop/feedback_x.md" + query)

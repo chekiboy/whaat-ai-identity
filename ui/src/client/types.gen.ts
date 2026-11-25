@@ -1764,6 +1764,12 @@ export type MemorySave = {
      */
     path: string;
     /**
+     * Reason
+     *
+     * Why it is saved, changed or removed, in one line; the commit message carries it.
+     */
+    reason?: string | null;
+    /**
      * Trigger
      *
      * The index line's text after the name: when to open the file.
@@ -4116,7 +4122,14 @@ export type DeleteMemoryData = {
          */
         path: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Reason
+         *
+         * Why it is saved, changed or removed, in one line; the commit message carries it.
+         */
+        reason?: string | null;
+    };
     url: '/api/v1/memory/memories/{path}';
 };
 

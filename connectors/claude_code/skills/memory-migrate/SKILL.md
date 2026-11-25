@@ -104,7 +104,7 @@ A memory in the wrong layer moves. A whole loose group whose files no later comm
 import commit, then `whaat memory import` with the same source and the new target on stdin
 (`{"sources": [{"path": …, "kind": "loose", "target": "acme/shop"}], "groups": ["1:acme/shop"], "state": …}`), so its
 dates and conversion come along. Otherwise file by file: save it at the new path with its current content and index
-trigger, then `whaat memory delete` the old path; its validity then counts from that day. Never edit whaat's state
+trigger and the reason `moved from <old path>`, then `whaat memory delete <old path> --reason "moved to <new path>"`; its validity then counts from that day. Never edit whaat's state
 files by hand to carry dates: name the gap to the user instead. Links name memories, not paths, so a move breaks none;
 check that they still resolve.
 

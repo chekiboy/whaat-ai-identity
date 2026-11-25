@@ -2833,10 +2833,24 @@
             "title": "Path",
             "type": "string"
           },
+          "reason": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "^[^\\r\\n]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why it is saved, changed or removed, in one line; the commit message carries it.",
+            "title": "Reason"
+          },
           "trigger": {
             "description": "The index line's text after the name: when to open the file.",
             "minLength": 1,
-            "pattern": "^[^\\n]+$",
+            "pattern": "^[^\\r\\n]+$",
             "title": "Trigger",
             "type": "string"
           },
@@ -2961,7 +2975,7 @@
             "anyOf": [
               {
                 "minLength": 1,
-                "pattern": "^[^\\n]+$",
+                "pattern": "^[^\\r\\n]+$",
                 "type": "string"
               },
               {
@@ -3340,7 +3354,7 @@
             "anyOf": [
               {
                 "minLength": 1,
-                "pattern": "^[^\\n]+$",
+                "pattern": "^[^\\r\\n]+$",
                 "type": "string"
               },
               {
@@ -3492,7 +3506,7 @@
           "path": {
             "description": "An existing memory dir on this machine, read only, never written.",
             "minLength": 1,
-            "pattern": "^[^\\n]+$",
+            "pattern": "^[^\\r\\n]+$",
             "title": "Path",
             "type": "string"
           },
@@ -6832,6 +6846,26 @@
             "schema": {
               "title": "Path",
               "type": "string"
+            }
+          },
+          {
+            "description": "Why it is saved, changed or removed, in one line; the commit message carries it.",
+            "in": "query",
+            "name": "reason",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "^[^\\r\\n]+$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Why it is saved, changed or removed, in one line; the commit message carries it.",
+              "title": "Reason"
             }
           }
         ],

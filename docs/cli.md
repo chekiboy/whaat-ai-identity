@@ -33,8 +33,8 @@ More: [Identities](identities.md), [MCP layer](mcp.md).
 | `whaat memory index task="…"` | The triggers that apply to the current repo |
 | `whaat memory open file=… because="…"` | Reads one memory and logs why |
 | `whaat memory dump dir=… purpose=… because="…"` | Reads a whole folder, to tidy, review or save |
-| `whaat memory save` | Saves a memory (JSON on stdin) and commits it |
-| `whaat memory delete <path>` | Removes a wrong memory and its index line |
+| `whaat memory save` | Saves a memory (JSON on stdin) and commits it, with the JSON's `reason` in the commit message |
+| `whaat memory delete <path> [--reason <why>]` | Removes a wrong memory and its index line |
 | `whaat memory reads` | What this session opened |
 | `whaat memory record <outcome> <paths>` | Records whether recalled memories held, misled or were irrelevant |
 | `whaat memory validity refresh` | Scores every memory |

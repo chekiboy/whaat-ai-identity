@@ -105,7 +105,8 @@ were confirmed on the page, risky ones listed by action, and that counts as the 
   acting, with git as `(cd <clone> && git …)`; a report is a week old.
 - A row's `actions` run in the listed order as one change; stop the row at the first that fails.
 - Make each change through the memory skill's Save rules: format, budget, index line in the right
-  dir's `MEMORY.md`; save with `W memory save`, remove with `W memory delete <path>`.
+  dir's `MEMORY.md`; save with `W memory save`, remove with `W memory delete <path>`. The `reason` (in the save
+  JSON, or `--reason` on a delete) names the report and the row: `curation <report> row <n>: <action>`.
 - Before committing a `trim`, `merge` or `split`, check what the text still does; lint proves format
   and budget, never that:
   - walk the diff: each removed sentence lives on somewhere you can name (the skill, the code on the

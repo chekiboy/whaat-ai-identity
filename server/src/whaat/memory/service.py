@@ -191,7 +191,8 @@ class MemoryService:
                 old_index, old_name = index_of(root, old)
                 changed.add(set_index_line(folder, old_index, old_name, None))
             rel = path.relative_to(root).as_posix()
-            commit = self._commit(folder, sorted(changed), f"memory: {'add' if created else 'update'} {rel}", warnings)
+            message = f"memory: {'add' if created else 'update'} {rel}{reason_suffix(memory.reason)}"
+            commit = self._commit(folder, sorted(changed), message, warnings)
         return SavedMemory(path=rel, created=created, commit=commit, warnings=warnings)
 
     def mark_measured(self, identity: str, rel_paths: list[str]) -> list[str]:
@@ -220,7 +221,7 @@ class MemoryService:
                 self._commit(folder, list(marked.values()), f"memory: source measured on {', '.join(marked)}", warnings)
         return [f"source measured, confirmed today: {rel}" for rel in marked] + warnings
 
-    def delete(self, identity: str, rel_path: str) -> SavedMemory:
+    def delete(self, identity: str, rel_path: str, reason: str | None = None) -> SavedMemory:
         folder = self._registry.folder_of(identity)
         root = folder / MEMORY_DIR
         path = self._inside(root, rel_path)
@@ -232,7 +233,7 @@ class MemoryService:
             index, name = index_of(root, path)
             changed = [path, set_index_line(folder, index, name, None)]
             rel = path.relative_to(root).as_posix()
-            commit = self._commit(folder, changed, f"memory: delete {rel}", warnings)
+            commit = self._commit(folder, changed, f"memory: delete {rel}{reason_suffix(reason)}", warnings)
         return SavedMemory(path=rel, created=False, commit=commit, warnings=warnings)
 
     def revert(self, identity: str, commits: list[str]) -> list[str]:
@@ -261,6 +262,10 @@ class MemoryService:
         except GitCommitError as err:
             warnings.append(f"saved but not committed: {err}")
             return None
+
+
+def reason_suffix(reason: str | None) -> str:
+    return f" — {reason}" if reason else ""
 
 
 def set_index_line(folder: Path, index: Path, name: str, line: str | None) -> Path:

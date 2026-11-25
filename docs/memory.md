@@ -79,8 +79,8 @@ Through the plugin, the agent uses the `/whaat:memory` and `/whaat:memory-recall
 | `whaat memory index task="…"` | Lists the triggers that apply to the current repo |
 | `whaat memory open file=… because="…"` | Reads one memory and logs why |
 | `whaat memory dump dir=… purpose=… because="…"` | Reads a whole folder, to tidy, review or save |
-| `whaat memory save` | Saves a memory and its index line as one commit |
-| `whaat memory delete <path>` | Removes a wrong memory and its index line |
+| `whaat memory save` | Saves a memory and its index line as one commit; its `reason` goes into the commit message |
+| `whaat memory delete <path> [--reason <why>]` | Removes a wrong memory and its index line |
 | `whaat memory reads` | Lists what this session opened |
 | `whaat memory record <held\|misled\|irrelevant> <paths>` | Records how the recalled memories went |
 | `whaat memory validity refresh` | Scores every memory |
