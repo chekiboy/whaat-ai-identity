@@ -465,20 +465,27 @@ def memory_where(
 
 @memory_app.command("save")
 def save_memory() -> None:
-    """Write the memory read from stdin as JSON (path, content, trigger, unindex) exactly as given, and commit it."""
+    """Write the memory read from stdin as JSON (path, content, trigger, unindex, reason) exactly as given, and commit
+    it; the reason, why it is saved or changed, goes into the commit message."""
     settings = load_settings()
     token = _identity_token(settings)
     _post_to_whaat(settings, "/api/v1/memory/memories", _object_from_stdin(), token)
 
 
 @memory_app.command("delete")
-def memory_delete(path: Annotated[str, typer.Argument(help="The memory's path below the memory root.")]) -> None:
+def memory_delete(
+    path: Annotated[str, typer.Argument(help="The memory's path below the memory root.")],
+    reason: Annotated[
+        str | None, typer.Option(help="Why it is removed, in one line; the commit message carries it.")
+    ] = None,
+) -> None:
     """Remove a memory that was simply wrong and its index line, in one commit."""
     settings = load_settings()
     token = _identity_token(settings)
     typer.echo(_ensure_running(settings), err=True)
     request = urllib.request.Request(
-        f"http://{settings.host}:{settings.port}/api/v1/memory/memories/{urllib.parse.quote(path)}",
+        f"http://{settings.host}:{settings.port}/api/v1/memory/memories/{urllib.parse.quote(path)}"
+        + (f"?{urllib.parse.urlencode({'reason': reason})}" if reason is not None else ""),
         headers={"Authorization": f"Bearer {token}"},
         method="DELETE",
     )

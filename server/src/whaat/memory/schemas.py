@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from whaat.reports.types.base import Strict
 
 MemoryPath = Annotated[str, StringConstraints(pattern=r"^[^\n]+\.md$")]
-Line = Annotated[str, StringConstraints(min_length=1, pattern=r"^[^\n]+$")]
+Line = Annotated[str, StringConstraints(min_length=1, pattern=r"^[^\r\n]+$")]
 
 
 class MemorySave(Strict):
@@ -19,6 +19,9 @@ class MemorySave(Strict):
     trigger: Line = Field(description="The index line's text after the name: when to open the file.")
     unindex: list[MemoryPath] = Field(
         default_factory=list, description="Memories this one supersedes: their index lines go, their files stay."
+    )
+    reason: Line | None = Field(
+        default=None, description="Why it is saved, changed or removed, in one line; the commit message carries it."
     )
 
 

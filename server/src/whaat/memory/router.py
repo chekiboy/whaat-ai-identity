@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse
 
 from whaat.agent import AgentTokenMissingError
@@ -35,6 +35,7 @@ from whaat.memory.schemas import (
     Guarded,
     IdentityMemory,
     LevelCall,
+    Line,
     LintCall,
     MemoryGraph,
     MemoryRoots,
@@ -102,10 +103,18 @@ def save_memory(request: Request, memory: MemorySave, service: MemoryServiceDep,
 
 
 @router.delete("/memories/{path:path}", response_model=SavedMemory)
-def delete_memory(path: str, service: MemoryServiceDep, identity: IdentityDep) -> SavedMemory:
+def delete_memory(
+    path: str,
+    service: MemoryServiceDep,
+    identity: IdentityDep,
+    reason: Annotated[
+        Line | None,
+        Query(description="Why it is saved, changed or removed, in one line; the commit message carries it."),
+    ] = None,
+) -> SavedMemory:
     """Remove a memory that was simply wrong and its index line, in one commit."""
     try:
-        return service.delete(identity, path)
+        return service.delete(identity, path, reason)
     except InvalidMemoryPathError as err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(err)) from err
     except MemoryNotFoundError as err:

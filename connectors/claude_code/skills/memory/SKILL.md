@@ -48,7 +48,7 @@ A file with no index line that another file `supersedes` is history: never act o
 
 1. `grep -ril <term> <memory>` first. Update the existing file rather than add a near-duplicate. If the
    new fact contradicts an old one: when the old one was simply wrong, fix it, or delete it with
-   `whaat memory delete <path>`; when it held until the user changed course, write the new file with
+   `whaat memory delete <path> --reason "<why, one line>"`; when it held until the user changed course, write the new file with
    `supersedes: <old name>` and remove the old one's index line (`unindex` below), but keep the file, so the
    change stays findable.
 2. Skip: what code, git history, CLAUDE.md or docs already say; per-conversation state (review
@@ -90,8 +90,10 @@ A file with no index line that another file `supersedes` is history: never act o
    weekly self-model-journal may propose folding into the core.
 5. Write the file and the trigger through whaat, which writes the file as given, sets that index line, and
    commits only those paths: put `{"path": "<the file's path>", "content": "<the whole file>", "trigger":
-   "<same trigger>", "unindex": ["<path of a memory this one supersedes>"]}` into a JSON file in the scratchpad
-   with the Write tool, then `whaat memory save < <that file>`. Say the `commit` and any `warnings`.
+   "<same trigger>", "unindex": ["<path of a memory this one supersedes>"], "reason": "<why it is saved or changed,
+   one line>"}` into a JSON file in the scratchpad with the Write tool, then `whaat memory save < <that file>`. The
+   reason becomes part of the commit message, so the history says why each memory changed: give it every time. Say
+   the `commit` and any `warnings`.
 
 ## task-end: Task end
 
